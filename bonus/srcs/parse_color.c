@@ -1,0 +1,111 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parse_color.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/22 18:07:11 by mcecchel          #+#    #+#             */
+/*   Updated: 2026/01/31 17:24:39 by mcecchel         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "cub3d.h"
+
+char	*extract_rgb_str(char *line, int identifier_len)
+{
+	char	*rgb_str;
+	char	*trimmed;
+	int		i;
+
+	i = identifier_len;
+	i = skip_spaces(line, i);
+	if (!line[i])
+		return (NULL);
+	// Estraggo la parte RGB
+	rgb_str = ft_strdup(&line[i]);
+	if (!rgb_str)
+		return (NULL);
+	// Rimuovo newline, spazi e tab all'inizio e alla fine
+	trimmed = ft_strtrim(rgb_str, " \t\n\r");
+	fd_printf(1, "Extracted RGB string: '%s'\n", trimmed);
+	free(rgb_str);
+	return (trimmed);
+}
+
+int	parse_floor_color(t_game *game, char *line)
+{
+	char	*rgb_str;
+	int		rgb_val[3];
+
+	// Controllo se ci sono duplicati
+	if (game->parse->is_floor_set)
+	{
+		fd_printf(2, "Error: Floor color already set\n");
+		return (-1);
+	}
+	// Estraggo riga RGB dopo F
+	rgb_str = extract_rgb_str(line, 1);
+	if (!rgb_str)
+		return (-1);
+	// Parso e valido i valori RGB
+	if (parse_rgb_vals(rgb_str, rgb_val) == -1)
+	{
+		free(rgb_str);
+		return (-1);
+	}
+	free(rgb_str);
+	// Creo struttura colore e salvo in game
+	game->floor->red = rgb_val[0];
+	game->floor->green = rgb_val[1];
+	game->floor->blue = rgb_val[2];
+	game->floor->hex = rgb_to_hex(rgb_val[0], rgb_val[1], rgb_val[2]);
+	game->parse->is_floor_set = true;
+	return (0);
+}
+
+// Procedimento come sopra
+int	parse_ceiling_color(t_game *game, char *line)
+{
+	char	*rgb_str;
+	int		rgb_val[3];
+
+	if (game->parse->is_ceiling_set)
+	{
+		fd_printf(2, "Error: Ceiling color already set\n");
+		return (-1);
+	}
+	rgb_str = extract_rgb_str(line, 1);
+	if (!rgb_str)
+		return (-1);
+	if (parse_rgb_vals(rgb_str, rgb_val) == -1)
+	{
+		free(rgb_str);
+		return (-1);
+	}
+	free(rgb_str);
+	game->ceiling->red = rgb_val[0];
+	game->ceiling->green = rgb_val[1];
+	game->ceiling->blue = rgb_val[2];
+	game->ceiling->hex = rgb_to_hex(rgb_val[0], rgb_val[1], rgb_val[2]);
+	game->parse->is_ceiling_set = true;
+	return (0);
+}
+
+// Main function
+int	parse_color(t_game *game, char *line)
+{
+	int	i;
+
+	i = skip_spaces(line, 0);
+	// Identifico se è floor o ceiling
+	if (ft_strncmp(&line[i], "F ", 2) == 0)
+		return (parse_floor_color(game, line));
+	else if (ft_strncmp(&line[i], "C ", 2) == 0)
+		return (parse_ceiling_color(game, line));
+	else
+	{
+		fd_printf(2, "Error: Invalid color identifier\n");
+		return (-1);
+	}
+}

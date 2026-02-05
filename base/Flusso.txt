@@ -1,0 +1,515 @@
+================================================================================
+                           ANALISI COMPLETA DEL FLUSSO
+                              cub3D - Ray Casting
+================================================================================
+
+INDICE:
+1. Avvio del programma (main)
+2. Fase di caricamento (parsing e inizializzazione)
+3. Loop principale (rendering e input)
+4. Ray Casting - Il cuore del motore
+5. Disegno della scena
+6. Chiusura del programma
+
+================================================================================
+1. AVVIO DEL PROGRAMMA (main.c)
+================================================================================
+
+main(int ac, char **av)
+│
+├─► validate_input(ac, av)
+│   └─ Controlla: file esiste? Ha estensione .cub? È leggibile?
+│      Se fallisce → ritorna -1 → exit
+│
+├─► struct_init(&g)
+│   └─ Alloca e inizializza TUTTE le strutture dati principali:
+│      ✓ ALLOCAZIONE: map, player, floor, wall, ceiling, tex_north/south/west/east, parse
+│      ✓ VALIDAZIONE: controlla che tutte le allocazioni siano riuscite
+│      ✓ INIZIALIZZAZIONE HELPER: initialize_mlx_fields() per MLX setup
+│      Usa le funzioni initialize_* (più sicure perché impostano valori espliciti):
+│      - t_game.map (la mappa con i muri)
+│      - t_game.player (posizione, direzione, e 10 campi movimento inizializzati)
+│      - t_game.tex_north, tex_south, tex_west, tex_east (texture pareti)
+│      - t_game.floor, t_game.wall, t_game.ceiling (colori RGB+hex)
+│      - t_game.parse (dati temporanei parsing)
+│      - t_game.perf (FPS counter fields: last_ms, fps, fps_raw, last_draw_ms)
+│      - t_game.show_fps (display flag = false)
+│      - width=1920, height=1080 (risoluzione base)
+│      - Se allocazione fallisce → return(1) per segnalare errore a main.c
+│
+├─► parse_file(&g, av[1])
+│   └─ LEGGE IL FILE .cub e estrae:
+│      • Texture path (NO, SO, WE, EA)
+│      • Colori (F = floor, C = ceiling)
+│      • Mappa 2D griglia (1=muro, 0=spazio, NSEW=player)
+│      • Posizione e direzione iniziale del player
+│   └─ Se errori → cleanup_game_fields(&g) → exit
+│
+├─► validate_map(&g)
+│   └─ VALIDA LA MAPPA:
+│      • Giocatore esiste? (esattamente 1)
+│      • Mappa ha buchi (spazi non circondarti da muri)?
+│      • Mappa è completamente circondata da muri?
+│   └─ Se errori → cleanup_game_fields(&g) → exit
+│
+├─► init_game(&g)
+│   └─ Inizializza le variabili di gioco:
+│      • columns_distance[] = array per salvare distanze da ogni colonna
+│      • Colori RGB convertiti in formato esadecimale
+│      • Velocità movimenti e rotazioni
+│
+├─► init_mlx(&g)
+│   └─ CREA LA FINESTRA GRAFICA:
+│      • g->mlx_init = mlx_init() → connessione con la libreria grafica
+│      • g->win = mlx_new_window() → crea finestra 800x600
+│      • g->screen = struttura per il buffer di disegno (off-screen)
+│      • Nasconde il cursore del mouse
+│
+├─► init_textures(&g)
+│   └─ CARICA LE TEXTURE DAI FILE .XPM:
+│      • Carica nord, sud, est, ovest (4 textures mandatory)
+│      • Se un file manca → cleanup_game_fields(&g) → exit
+│      • Ottiene l'indirizzo memoria dei dati pixel (formato 32-bit)
+│      • Ottimizzazione: caricamento diretto senza variabili temporanee
+│
+├─► Registrazione event hooks
+│   └─ Dice a MLX: "Quando succede X, chiama la funzione Y":
+│      • Evento 2 (KEY_PRESS) → key_press()
+│      • Evento 3 (KEY_RELEASE) → key_release()
+│      • Evento 6 (MOUSE_MOVE) → mouse_move()
+│      • Evento 17 (CLOSE_WINDOW) → clean_up()
+│
+├─► mlx_loop_hook(g->mlx_init, loop_hook, &g)
+│   └─ Registra loop_hook() da eseguire ad ogni frame (60 FPS)
+│
+└─► mlx_loop(g->mlx_init)
+    └─ AVVIA IL LOOP PRINCIPALE
+       • Esegue loop_hook() circa 60 volte al secondo
+       • Aspetta gli eventi (tastiera, mouse, finestra)
+       • Continua finché non chiudi la finestra
+       • ⚠️ Se struct_init fallisce PRIMA di mlx_loop:
+         - main.c chiama cleanup_game_fields(&g) per pulire risorse parziali
+         - Questo garantisce zero memory leaks anche in caso di errore
+
+
+================================================================================
+2. FASE DI CARICAMENTO - DETTAGLI
+================================================================================
+
+PARSING DEL FILE .cub:
+─────────────────────────
+
+Struttura file:
+    NO ./texture/nord.xpm
+    SO ./texture/sud.xpm
+    WE ./texture/ovest.xpm
+    EA ./texture/est.xpm
+    F 220,100,0
+    C 225,30,0
+    
+    111111
+    100001
+    10N001
+    100001
+    111111
+
+Il parser legge riga per riga:
+1. Salta linee vuote
+2. Se inizia con NO/SO/WE/EA → salva percorso texture
+3. Se F o C → parsa RGB (0-255 per ogni colore)
+4. Quando vede numeri/NSEW → inizia a leggere la mappa
+5. Controlla che ogni riga sia rettangolare
+6. Trova il player (N/S/E/W) e salva posizione + direzione
+
+DIREZIONE GIOCATORE:
+────────────────────
+N = Nord (guarda su)     → dir_x=0, dir_y=-1
+S = Sud (guarda giù)     → dir_x=0, dir_y=1
+E = Est (guarda destra)  → dir_x=1, dir_y=0
+W = Ovest (guarda sinistra) → dir_x=-1, dir_y=0
+
+Il giocatore ha anche un "piano camera" perpendiculare alla vista.
+
+
+================================================================================
+3. LOOP PRINCIPALE - Ad ogni frame
+================================================================================
+
+loop_hook() viene chiamato ~60 volte al secondo:
+
+    loop_hook(t_game *g)
+    │
+    ├─► perf_update(&g->perf)
+    │   └─ Aggiorna FPS counter (calcola quanti frame al secondo)
+    │
+    ├─► rendering(g)
+    │   └─ RENDERIZZA LA SCENA (vedi capitolo 4)
+    │
+    ├─► mlx_put_image_to_window(g->mlx_init, g->win, g->screen->img, 0, 0)
+    │   └─ Mostra il buffer sullo schermo
+    │
+    └─► draw_fps_overlay(g) [opzionale]
+        └─ Disegna il contatore FPS nell'angolo
+
+
+Durante loop_hook():
+- Se hai premuto W → player avanza
+- Se hai premuto A/D → player si muove lateralmente
+- Se hai premuto frecce/mouse → player ruota
+- update_player_position() applica i movimenti
+- update_player_rotation() applica le rotazioni
+
+
+================================================================================
+4. RAY CASTING - IL CUORE DEL MOTORE
+================================================================================
+
+COS'È IL RAY CASTING?
+──────────────────────
+
+È una tecnica per simulare la visione 3D da una prospettiva 2D:
+
+1. Il mondo è una griglia 2D (la mappa)
+2. Il giocatore è un punto con una direzione
+3. Per OGNI COLONNA DELLO SCHERMO (800 colonne):
+   - Calcola un raggio partendo dal giocatore
+   - Trova il primo muro che il raggio colpisce
+   - Calcola la distanza fino al muro
+   - Disegna una striscia verticale (più vicino = più alto)
+
+
+RENDERING():
+─────────────
+
+void rendering(t_game *g)
+{
+    ft_memset(g->screen->addr, 0, ...);  // Azzera lo schermo (nero)
+    update_player_position(g);            // Applica movimenti
+    update_player_rotation(g);            // Applica rotazioni
+    
+    for (int i = 0; i < g->width; i++)  // Per ogni colonna (800 volte)
+        cast_one_ray(g, i);              // Lancia un raggio per questa colonna
+}
+
+Ad ogni frame:
+1. Tutto lo schermo diventa nero
+2. Il giocatore si muove/ruota in base ai tasti
+3. Lanciano 800 raggi (uno per colonna schermo)
+4. Cada raggio trova il muro più vicino
+5. Viene disegnata una striscia verticale con la texture del muro
+
+
+CAST_ONE_RAY(g, x) - Lancia UN raggio
+─────────────────────────────────────
+
+Il raggio per la colonna X:
+
+    cast_one_ray(t_game *g, int x)
+    │
+    ├─► init_ray_direction(&ray, g, x)
+    │   │
+    │   └─ Calcola dove punta il raggio:
+    │      • camera_x = normalizza X (da -1 a +1)
+    │      • RAY_DIR_X = player.dir_x + player.plane_x * camera_x
+    │      • RAY_DIR_Y = player.dir_y + player.plane_y * camera_x
+    │      
+    │      Esempio: 
+    │      Se sei al centro schermo (x=400):
+    │         camera_x = 0 → raggio guarda diritto
+    │      Se sei a destra (x=799):
+    │         camera_x = +1 → raggio guarda in alto a destra
+    │      Se sei a sinistra (x=0):
+    │         camera_x = -1 → raggio guarda in alto a sinistra
+    │
+    ├─► init_ray_map(&ray, g)
+    │   └─ Posizione iniziale del raggio nella griglia mappa:
+    │      MAP_X = (int)player.pos_x  (cella X dove sei)
+    │      MAP_Y = (int)player.pos_y  (cella Y dove sei)
+    │
+    ├─► init_delta_distance(&ray)
+    │   │
+    │   └─ Quanto "salta" il raggio ad ogni step:
+    │      • DELTA_DIST_X = 1 / |RAY_DIR_X| (distanza verticale tra grid lines)
+    │      • DELTA_DIST_Y = 1 / |RAY_DIR_Y| (distanza orizzontale tra grid lines)
+    │      
+    │      Se il raggio è quasi verticale (RAY_DIR_X ≈ 0):
+    │         DELTA_DIST_X = infinito (non colpisce linee verticali)
+    │      Se il raggio è quasi orizzontale (RAY_DIR_Y ≈ 0):
+    │         DELTA_DIST_Y = infinito (non colpisce linee orizzontali)
+    │
+    ├─► init_step_side_distance(&ray, g)
+    │   │
+    │   └─ Distanza al PRIMO confine della griglia:
+    │      Se RAY_DIR_X > 0 (guarda destra):
+    │         STEP_X = +1
+    │         SIDE_DIST_X = (MAP_X + 1.0 - player.pos_x) * DELTA_DIST_X
+    │      Se RAY_DIR_X < 0 (guarda sinistra):
+    │         STEP_X = -1
+    │         SIDE_DIST_X = (player.pos_x - MAP_X) * DELTA_DIST_X
+    │
+    ├─► perform_dda(&ray, g)  ← ALGORITMO PRINCIPALE
+    │   │
+    │   └─ DDA = Digital Differential Analyzer
+    │      È un algoritmo che "cammina" lungo il raggio finché non colpisce un muro
+    │
+    │      Loop principale:
+    │      while (!ray.hit && steps < 100)  // Fino a 100 step o fino a hit
+    │      {
+    │          step_ray(&ray);      // Avanza di uno step
+    │          check_collision();   // Controlla se hai colpito un muro
+    │      }
+    │
+    │
+    │      STEP_RAY():
+    │      ───────────
+    │      Avanza il raggio al prossimo confine della griglia:
+    │      
+    │      if (SIDE_DIST_X < SIDE_DIST_Y)
+    │          // Il confine verticale è più vicino
+    │          SIDE_DIST_X += DELTA_DIST_X   // Salta al prossimo confine verticale
+    │          MAP_X += STEP_X                 // Cambia cella X
+    │          ray->side = 0                   // Abbiamo colpito un confine VERTICALE
+    │      else
+    │          // Il confine orizzontale è più vicino
+    │          SIDE_DIST_Y += DELTA_DIST_Y   // Salta al prossimo confine orizzontale
+    │          MAP_Y += STEP_Y                 // Cambia cella Y
+    │          ray->side = 1                   // Abbiamo colpito un confine ORIZZONTALE
+    │
+    │      Questa logica assicura che il raggio colpisca i confini della griglia
+    │      in ordine di distanza (più vicino prima).
+    │
+    │
+    │      CHECK_COLLISION():
+    │      ──────────────────
+    │      if (MAP_X < 0 || MAP_X >= width || MAP_Y < 0 || MAP_Y >= height)
+    │          return;  // Fuori dalla mappa
+    │      if (map[MAP_Y][MAP_X] == '1')
+    │          ray.hit = 1;  // Abbiamo colpito un muro!
+    │
+    │      Appena tocchiamo una cella con '1' (muro), il raggio si ferma.
+    │
+    │
+    │      VISUALIZZAZIONE DEL DDA:
+    │      ────────────────────────
+    │      Mappa 2D:
+    │          0 1 2 3 4 5
+    │      0   1 1 1 1 1 1
+    │      1   1 . . . . 1
+    │      2   1 . P . . 1  ← P = giocatore a (2, 2)
+    │      3   1 . . . . 1
+    │      4   1 1 1 1 1 1
+    │
+    │      Il giocatore guarda a destra:
+    │      - Step 1: SIDE_DIST_X < SIDE_DIST_Y → MAP_X diventa 3
+    │                 Cella (3,2) = '.' → no hit
+    │      - Step 2: SIDE_DIST_X < SIDE_DIST_Y → MAP_X diventa 4
+    │                 Cella (4,2) = '.' → no hit
+    │      - Step 3: SIDE_DIST_X < SIDE_DIST_Y → MAP_X diventa 5
+    │                 Cella (5,2) = '1' → HIT! Trovato muro
+    │
+    │      La distanza è SIDE_DIST_X (dove il raggio ha colpito il confine verticale).
+    │
+    │
+    ├─► compute_wall_drawing(g->drawing, &ray, g)
+    │   │
+    │   └─ Calcola come disegnare il muro:
+    │      Se ray.hit == 0 (non abbiamo colpito nulla):
+    │          wall_distance = 1000 (molto lontano)
+    │          line_height = 0 (parete non visibile)
+    │      Altrimenti:
+    │          wall_distance = compute_wall_distance()
+    │              = |muro| / abs(sin/cos direzione raggio)
+    │          line_height = screen_height / wall_distance
+    │              Se parete è a 1 metro → linea alta 600px
+    │              Se parete è a 10 metri → linea alta 60px
+    │          draw_start = dove inizia il disegno verticale
+    │          draw_end = dove finisce il disegno verticale
+    │          (centrato verticalmente sullo schermo)
+    │
+    │      Esempio con wall_distance = 2:
+    │          line_height = 600 / 2 = 300
+    │          draw_start = -300/2 + 300 = 150 (da 150)
+    │          draw_end = 300/2 + 300 = 450 (a 450)
+    │          → Disegna una striscia verticale da pixel 150 a 450
+    │
+    │
+    ├─► WALL_DISTANCE_ARRAY[x] = draw->wall_distance
+    │   └─ Salva la distanza per questa colonna (usato per calcoli)
+    │
+    └─► draw_columns(g, x, g->drawing)
+        └─ Disegna la colonna verticale con la texture corretta (vedi capitolo 5)
+
+
+================================================================================
+5. DISEGNO DELLA SCENA
+================================================================================
+
+draw_columns(g, x, draw) - Disegna una colonna dello schermo
+
+Per ogni pixel VERTICALE della colonna x:
+    
+    y = 0 (top dello schermo)
+    while (y < g->height)
+    {
+        if (y < draw->draw_start)
+            Disegna CEILING (colore ceiling)
+        else if (y < draw->draw_end)
+            Disegna WALL (texture della parete)
+        else
+            Disegna FLOOR (colore floor)
+        y++;
+    }
+
+DISEGNO DEL MURO:
+─────────────────
+
+Per ogni pixel del muro (da draw_start a draw_end):
+    1. Calcola quale parete è stata colpita (nord, sud, est, ovest)
+       based on ray->side e direzione del raggio
+    
+    2. tex_x = quale colonna della texture usare
+       (dipende da dove il raggio ha colpito il muro)
+    
+    3. tex_y = quale riga della texture usare
+       (dipende da quale riga dello schermo stiamo disegnando)
+    
+    4. Carica il colore pixel dalla texture: texture[tex_y][tex_x]
+    
+    5. Applica shading (più lontano = più scuro)
+    
+    6. Scrive il pixel nello schermo buffer
+
+Esempio:
+    Hai colpito la parete nord a coordinate (4.7, 2.3)
+    Il muro usa la texture nord
+    tex_x = parte decimale * larghezza_texture = 0.7 * 64 = 44
+    tex_y = dipende da quale altezza dello schermo
+    color = texture_nord.pixels[44][tex_y]
+    write pixel(screen, x, y, color)
+
+
+SHADING:
+────────
+
+Se la parete è lontana, diventa più scura:
+    - Parete a 1 metro: colore intero
+    - Parete a 5 metri: colore / 5 (più scuro)
+    - Parete a 10 metri: colore / 10 (ancora più scuro)
+
+La formula è: colore_finale = colore_originale * (1 / distanza)
+
+
+================================================================================
+6. INPUT E CONTROLLI
+================================================================================
+
+key_press(int keycode, t_game *g):
+    W     → move_forward = 1
+    A     → move_left = 1
+    S     → move_backward = 1
+    D     → move_right = 1
+    FRECCIA SU    → rotate_left = 1
+    FRECCIA GIÙ   → rotate_right = 1
+    ESC   → clean_up() e exit
+    M     → toggle show_fps
+
+update_player_position():
+    if (move_forward)
+        player.pos_x += player.dir_x * MOVE_SPEED
+        player.pos_y += player.dir_y * MOVE_SPEED
+    if (move_backward)
+        player.pos_x -= player.dir_x * MOVE_SPEED
+        ...
+    if (move_left)
+        ...movimento laterale (perpendiculare alla vista)...
+    
+    Controlla collisioni: il giocatore non può entrare nei muri
+
+update_player_rotation():
+    if (rotate_left)
+        Ruota il vettore dir (e plane) di -ROT_SPEED radianti
+    if (rotate_right)
+        Ruota il vettore dir (e plane) di +ROT_SPEED radianti
+    
+    La rotazione è una moltiplicazione per una matrice di rotazione 2D
+
+
+MOUSE:
+──────
+
+mouse_move(int x, int y, t_game *g):
+    Calcola quanto il mouse si è spostato dal centro
+    Se spostamento > soglia:
+        Ruota il giocatore proporzionalmente
+        Sposta il mouse al centro (per movimento infinito)
+
+
+================================================================================
+7. CHIUSURA DEL PROGRAMMA
+================================================================================
+
+clean_up(t_game *g):
+    │
+    ├─► cleanup_game_fields(g)
+    │   ├─► cleanup_parsing_fields(g)
+    │   │   ├─ Libera texture (nord, sud, est, ovest)
+    │   │   ├─ Libera colori
+    │   │   ├─ Libera mappa
+    │   │   └─ Libera dati parsing
+    │   │
+    │   └─► cleanup_mlx_resources(g)
+    │       ├─ Libera le immagini (screen, texture images)
+    │       ├─ Distrugge la finestra
+    │       └─ Distrugge il display MLX
+    │
+    └─► exit(0)
+
+Valgrind verifica: 0 bytes definitely lost ✓
+
+
+================================================================================
+RIASSUNTO DEL FLUSSO COMPLETO
+================================================================================
+
+    main() 
+        ↓
+    carica file .cub (parsing)
+        ↓
+    valida mappa e giocatore
+        ↓
+    alloca strutture dati
+        ↓
+    crea finestra e carica texture
+        ↓
+    LOOP PRINCIPALE: 60 volte al secondo
+    ├─ Leggi input (tastiera, mouse)
+    ├─ Aggiorna posizione e rotazione giocatore
+    ├─ Per ogni colonna dello schermo (800 volte):
+    │   ├─ Calcola direzione raggio
+    │   ├─ Esegui DDA (cammina fino a trovare muro)
+    │   ├─ Calcola distanza
+    │   └─ Disegna striscia verticale con texture
+    ├─ Mostra schermo
+    └─ Aggiorna FPS
+        
+    Quando chiudi la finestra:
+        ↓
+    Libera tutta la memoria
+        ↓
+    Esce dal programma
+
+
+================================================================================
+CONCETTI CHIAVE
+================================================================================
+
+1. RAY CASTING = lanciare raggi da una posizione per trovare le pareti
+2. DDA = algoritmo per "camminare" lungo il raggio nella griglia
+3. SIDE = quale confine della griglia è stato colpito (0=verticale, 1=orizzontale)
+4. WALL_DISTANCE = distanza dal giocatore al muro colpito
+5. SHADING = rendere le cose più scure se lontane
+6. TEXTURE MAPPING = disegnare l'immagine del muro trovato
+
+Il tutto insieme crea l'illusione di un mondo 3D, anche se la mappa è 2D!
+
+================================================================================

@@ -1,0 +1,559 @@
+SPIEGAZIONE COMPLETA DEL FLUSSO (cartella bonus)
+================================================
+
+NOTA SULLO SCOPO
+- Il testo segue l’ordine reale del programma: input → parsing → validazione → init grafica → loop → rendering.
+- Per ogni funzione: descrivo cosa fa, ogni variabile importante, e perché viene usata.
+- Il linguaggio è semplice ma preciso.
+
+
+1) AVVIO PROGRAMMA (main.c)
+
+1.1 main(int ac, char **av)
+- t_game g = {0}: crea la struttura principale e la azzera. Motivo: evitare valori casuali.
+- validate_input(ac, av): controlla argomenti e file. Motivo: senza file valido tutto il resto fallisce.
+- struct_init(&g): alloca e imposta tutte le strutture base.
+- parse_file(&g, av[1]): legge il file .cub e salva texture, colori, mappa.
+- validate_map(&g): verifica che la mappa sia corretta e chiusa.
+- init_game(&g): crea buffer di lavoro usati nel rendering.
+- init_mlx(&g): avvia MLX e prepara finestra e schermo.
+- init_textures(&g): carica texture da file XPM e inizializza porte.
+- mlx_hook(...): collega funzioni per input tastiera e mouse.
+- mlx_loop_hook(...): collega la funzione per il ciclo principale.
+- mlx_loop(...): entra nel loop grafico (il programma resta qui finché non si chiude).
+- cleanup_game_fields(&g): pulisce memoria a fine loop.
+
+Variabili in gioco:
+- ac, av: numero e lista argomenti; servono per sapere quale file aprire.
+- g: contiene tutto (mappa, player, texture, porte, schermo, MLX).
+
+
+2) VALIDAZIONE INPUT (validate_input.c)
+
+2.1 validate_input(int ac, char **av)
+- ac: numero argomenti. Deve essere 2 (programma + file).
+- av[1]: percorso file .cub.
+- Chiama check_file_extension: serve a garantire formato previsto.
+- Chiama check_file_access: serve a garantire che il file si possa leggere.
+
+2.2 check_file_extension(char *filename)
+- len = ft_strlen(filename): lunghezza della stringa.
+- Se len < 5: file troppo corto per contenere “.cub”.
+- extention = filename + (len - 4): punta agli ultimi 4 caratteri.
+- Confronto con “.cub”: se non coincide, formato non valido.
+Motivo: evitare parsing di file sbagliati.
+
+2.3 check_file_access(char *filename)
+- fd = open(filename, O_RDONLY): prova ad aprire in lettura.
+- Se fd < 0: il file non esiste o non è leggibile.
+Motivo: fermare subito il programma se non possiamo leggere.
+
+
+3) STRUTTURE BASE (engine/init.c + srcs/init_structs.c + utils/init_structs_utils.c)
+
+3.1 struct_init(t_game *g) [engine/init.c] - PATTERN SEMPLICE
+Pattern di design: "alloca tutto → valida tutto → ritorna errore o inizializza helper"
+
+FASE 1 - ALLOCAZIONE (10 allocazioni):
+- g->map = initialize_map()
+- g->player = initialize_player()
+- g->floor/wall/ceiling = initialize_color() (3 volte)
+- g->tex_north/south/west/east = initialize_texture() (4 volte)
+- g->parse = initialize_parse()
+
+FASE 2 - VALIDAZIONE (single if statement):
+- if (!g->map || !g->player || !g->floor || ... || !g->parse)
+    return (1);  // Segnala errore a main.c
+- NO cleanup interno: delegato a main.c cleanup_game_fields()
+
+FASE 3 - INIZIALIZZAZIONE HELPER (se tutto OK):
+- initialize_door_system(g) - registra porte dalla mappa
+- initialize_mlx_fields(g) - imposta MLX fields (width/height/perf/show_fps)
+- return (0) - successo
+
+Vantaggi: semplice (18 righe), fail-fast, responsabilità chiara, NULL-safe
+
+
+Variabili allocate:
+- g->map: contiene grid, width, height.
+- g->player: 10 campi (pos, dir, plane, movimento flags, mouse, columned_distance)
+- g->floor/ceiling/wall: colori RGB + hex.
+- g->tex_*: texture principali (nord, sud, est, ovest).
+- g->parse: info per parsing (righe, flag elementi, map_start).
+- g->perf: performance tracking (last_ms, fps, fps_raw, last_draw_ms).
+- g->show_fps: flag display FPS (inizializzato a false).
+- g->doors[]/door_frames[]/door_count: sistema porte.
+
+3.2 init_structs(void) [srcs/init_structs.c]
+- Versione alternativa che crea un t_game e chiama initialize_*.
+- Ogni initialize_* crea una struttura con valori “sicuri”.
+Motivo: evitare campi garbage e facilitare controlli futuri.
+
+3.3 initialize_texture
+- texture->path = NULL, texture->img = NULL: segnala che non è ancora caricata.
+
+3.4 initialize_color
+- red/green/blue/hex = -1: indica “non impostato”.
+
+3.5 initialize_map
+- grid = NULL, width/height = 0: mappa non ancora letta.
+
+3.6 initialize_player
+- pos_x/pos_y = 0: posizione iniziale prima del parsing.
+- dir_x/dir_y, plane_x/plane_y = 0: verranno impostati dal parser.
+
+3.7 initialize_parse
+- file_lines = NULL, line_count = 0, map_start = -1.
+- flag is_*_set = false: serviranno per verificare duplicati.
+
+
+4) LETTURA FILE (read_file.c)
+
+4.1 load_file_to_parse(t_game *game, char *filename)
+- game->parse->file_lines = read_file_lines(...).
+- line_count viene salvato dentro parse.
+Motivo: serve accesso diretto alle righe durante parsing.
+
+4.2 read_file_lines(char *filename, int *line_count)
+- line_count = count_file_lines: serve per allocare il numero esatto di righe.
+- total_lines = malloc(sizeof(char*) * (line_count + 1)):
+  +1 per terminatore NULL.
+- open_and_read_lines: riempie l’array con le righe.
+
+4.3 count_file_lines
+- fd = open; line = get_next_line(fd).
+- line_count++ per ogni riga letta.
+Motivo: avere dimensione precisa dell’array.
+
+4.4 open_and_read_lines
+- Legge ogni riga e rimuove il '\n' finale:
+  se c’è, viene sostituito con '\0'.
+Motivo: trattare la riga come stringa normale.
+
+Variabili:
+- fd: descrittore file.
+- line: riga corrente letta.
+- total_lines[i]: riga salvata in memoria.
+
+
+5) IDENTIFICAZIONE ELEMENTI (identify_elements.c + parse_utils.c)
+
+5.1 find_map_start(t_game *game)
+- Scorre tutte le righe.
+- Se una riga è vuota: la salta.
+- Se elem_found == 6: la riga successiva non vuota è l’inizio mappa.
+Motivo: il file .cub ha prima 6 elementi, poi la mappa.
+
+Variabili:
+- i: indice riga corrente.
+- elem_found: numero di elementi trovati (NO/SO/WE/EA/F/C).
+
+5.2 is_line_empty(char *line)
+- Ritorna true se la riga contiene solo spazi o tab.
+Motivo: righe vuote non devono essere considerate elementi.
+
+5.3 is_valid_identifier(char *line)
+- Controlla se la riga inizia con NO/SO/WE/EA o F/C.
+Motivo: serve per contare correttamente gli elementi.
+
+
+6) PARSING ELEMENTI (parse_file.c, parse_texture.c, parse_color.c)
+
+6.1 parse_file(t_game *game, char *filename)
+- load_file_to_parse: carica righe.
+- find_map_start: trova inizio mappa.
+- parse_elements: analizza le righe prima della mappa.
+- are_all_elements_set: controlla che 6 elementi siano presenti.
+- extract_map: crea la griglia della mappa.
+
+6.2 parse_elements
+- Scorre da 0 a map_start - 1.
+- Ignora righe vuote.
+- parse_element su ogni riga.
+
+6.3 parse_element
+- Se riga inizia con NO/SO/WE/EA → parse_texture.
+- Se riga inizia con F/C → parse_color.
+- Se riga non è vuota e non è muro ‘1’, è errore.
+Motivo: evitare righe invalide.
+
+6.4 parse_texture
+- Sceglie la funzione giusta in base all’identificatore.
+
+6.5 parse_north_texture / parse_south_texture / parse_west_texture / parse_east_texture
+- Controlla duplicati con is_*_set.
+- path = get_texture_path(...): salva il percorso.
+- validate_texture_file(path): verifica che esista.
+- is_*_set = true.
+
+6.6 get_texture_path(char *line, int identifier_len)
+- i = skip_spaces(line, 0): salta spazi iniziali.
+- i += identifier_len: salta l’identificatore.
+- i = skip_spaces(line, i): salta spazi tra identificatore e path.
+- path = ft_strdup(&line[i]): copia il path.
+Motivo: estrarre solo la parte utile.
+
+6.7 validate_texture_file
+- open(path) e chiude: serve a garantire file valido.
+
+6.8 parse_color
+- Se riga inizia con F → parse_floor_color.
+- Se riga inizia con C → parse_ceiling_color.
+
+6.9 parse_floor_color / parse_ceiling_color
+- Controllano duplicati.
+- rgb_str = extract_rgb_str: stringa con “R,G,B”.
+- parse_rgb_vals: converte in int e valida.
+- Salva in game->floor/ceiling.
+- Calcola hex con rgb_to_hex.
+
+6.10 extract_rgb_str
+- i = skip_spaces(line, identifier_len) per arrivare ai numeri.
+- rgb_str = ft_strdup(&line[i]): copia il testo dopo F/C.
+- trimmed = ft_strtrim(rgb_str, " \t\n\r"): rimuove spazi esterni.
+Motivo: evitare errori con spazi extra.
+
+6.11 parse_rgb_vals
+- validate_and_split_rgb: controlla formato e split.
+- process_single_rgb_val per ogni parte:
+  - ft_strtrim per pulire.
+  - is_valid_nbr: solo numeri.
+  - ft_atoi: converte stringa in int.
+  - validate_rgb_val: 0..255.
+
+6.12 rgb_to_hex
+- Formula: (R << 16) | (G << 8) | B.
+Motivo: MLX usa il colore in esadecimale.
+
+
+7) ESTRAZIONE MAPPA (extract_map.c + extract_map_utils.c)
+
+7.1 extract_map
+- map_height = get_map_height: conta righe di mappa reali.
+- map_width = get_map_width: lunghezza massima riga.
+- map_grid = alloc_map_grid(map_height).
+- fill_map_grid: riempie le righe con padding.
+- Assegna grid, width, height a game->map.
+
+7.2 get_map_height
+- Conta solo righe non vuote dopo map_start.
+Motivo: ignorare righe vuote fuori mappa.
+
+7.3 get_map_width
+- Trova la riga più lunga.
+Motivo: serve un rettangolo uniforme per accesso sicuro.
+
+7.4 pad_map_line
+- Crea una stringa lunga “width”.
+- Copia i caratteri originali.
+- Riempe con spazi fino a width.
+Motivo: righe corte diventano sicure da indicizzare.
+
+7.5 fill_map_grid
+- Per ogni riga valida, chiama process_map_line.
+- Se trova una riga vuota in mezzo alla mappa, controlla se dopo c’è altro.
+Motivo: mappa non deve avere “buchi di righe vuote”.
+
+
+8) VALIDAZIONE MAPPA (validate_map.c, validate_map_chars.c, validate_map_borders.c)
+
+8.1 validate_map
+- validate_and_find_player: controlla caratteri e player.
+- validate_map_borders: verifica che la mappa sia chiusa.
+
+8.2 validate_and_find_player
+- scan_map_for_player: scansiona ogni cella.
+- player_count deve essere 1.
+- init_player_position per impostare posizioni e direzione.
+
+8.3 scan_map_for_player
+- Per ogni cella:
+  - validate_char_and_check_player: verifica carattere valido.
+  - Se player, salva coordinate e direzione.
+
+8.4 validate_char_and_check_player
+- is_valid_map_char: accetta solo 0/1/space/D/N/S/E/W.
+- is_player_char: incrementa player_count.
+Motivo: evitare mappe con simboli sconosciuti.
+
+8.5 init_player_position
+- pos_x = x + 0.5, pos_y = y + 0.5:
+  posiziona il player al centro della cella.
+- set_player_direction: imposta direzione e piano camera.
+- grid[y][x] = '0': la cella del player diventa spazio libero.
+Motivo: il player non è un muro.
+
+8.6 set_player_direction / set_direction_vector / set_camera_plane
+- dir_x/dir_y: direzione di vista (unitaria).
+- plane_x/plane_y: vettore perpendicolare che definisce il FOV.
+- 0.66 è scelta standard per FOV ~66°.
+
+8.7 validate_map_borders
+- check_top_bottom_borders + check_left_right_borders:
+  assicurano che i bordi siano chiusi con muri o spazi.
+- flood_fill su copia mappa: controlla che non si esca fuori.
+
+8.8 flood_fill
+- Se esce dai bordi → mappa aperta.
+- Se trova spazio ‘ ’ → mappa aperta.
+- Segna celle con ‘V’ per evitare loop.
+Motivo: garantire mappa chiusa.
+
+
+9) INIZIALIZZAZIONE GRAFICA E TEXTURE (init.c, texture.c, door_init.c)
+
+9.1 init_game
+- init_color: imposta colori base per sicurezza.
+- columns_distance: array di double per distanza di ogni colonna (usato per rendering).
+  Allocato con malloc(sizeof(double) * g->width) perché la dimensione dipende dalla risoluzione.
+- drawing: struttura con dati di disegno per ray casting (allocata con ft_calloc).
+
+9.2 init_color
+- floor/ceiling/wall RGB impostati.
+- hex calcolato con R*65536 + G*256 + B.
+Motivo: MLX usa colore in esadecimale.
+
+9.3 init_mlx
+- mlx_init: crea il contesto grafico.
+- mlx_new_window: finestra con width/height.
+- mlx_new_image: buffer per disegnare.
+- mlx_get_data_addr: ottiene puntatore a pixel, bpp, line_len.
+Motivo: disegnare pixel direttamente in memoria.
+
+9.4 init_textures
+- init_walls: carica NO/SO/WE/EA da file XPM.
+- allocate_door_frames: alloca 4 texture porte.
+- init_doors_text: carica 4 immagini porta.
+- init_doors: scansiona mappa e registra le porte.
+
+9.5 allocate_and_load_xpm / setup_texture_address / load_single_texture
+- Caricano l’immagine e ottengono il buffer dati.
+- Separazione in più funzioni: più facile gestire errori.
+
+9.6 init_doors
+- Scorre map grid.
+- Se trova ‘D’, crea una porta con init_single_door.
+
+9.7 init_single_door
+- Salva x, y, orientamento.
+- is_open = 0, animation = 0.
+- frame_count = 4 e assegna i frame.
+
+9.8 detect_door_orientation
+- Controlla muri attorno alla porta:
+  se ha muri sopra/sotto → orizzontale.
+  se ha muri sinistra/destra → verticale.
+Motivo: sapere la direzione naturale della porta.
+
+
+10) INPUT ED EVENTI (key_management.c, key_utils.c, mouse_management.c)
+
+10.1 key_press
+- Se ESC (65307): chiude tutto.
+- handle_movement_keys: set flag movimento.
+- handle_rotation_keys: set flag rotazione.
+- handle_toggle_keys: toggle FPS e porte.
+- Tasto M: abilita/disabilita mouse.
+
+10.2 handle_movement_keys
+- move_forward/back/left/right = 1.
+Motivo: il movimento avviene nel loop, non immediatamente.
+
+10.3 handle_rotation_keys
+- rotate_left/right = 1.
+- accetta Q/E e frecce: più comodo per l’utente.
+
+10.4 handle_toggle_keys
+- I: show_fps toggla overlay.
+- F: check_and_toggle_door.
+
+10.5 key_release
+- Rilascia i flag movimento/rotazione.
+Motivo: senza rilascio il player continuerebbe a muoversi.
+
+10.6 mouse_move
+- center_x = width/2: centro finestra.
+- delta_x = x - center_x: spostamento orizzontale.
+- apply_rotation(delta_x * MOUSE_SENSITIVITY): rotazione proporzionale.
+- Riporta il mouse al centro.
+Motivo: usare movimento relativo e continuo.
+
+
+11) CICLO PRINCIPALE (main_rendering.c)
+
+11.1 loop_hook
+- perf_update: aggiorna tempi e FPS.
+- update_door_animations: aggiorna stato animazioni porte.
+- rendering: disegna frame.
+- mlx_put_image_to_window: mostra il frame.
+- Se show_fps: draw_fps_overlay.
+
+11.2 rendering
+- ft_memset(screen): pulisce buffer.
+- update_player_position: applica movimento.
+- update_player_rotation: applica rotazione.
+- Per ogni colonna: cast_one_ray.
+- draw_minimap: disegna mappa in miniatura.
+
+
+12) MOVIMENTO E COLLISIONI (move_management.c, rotation.c)
+
+12.1 try_move_x / try_move_y
+- step: quantità di movimento.
+- off = PLAYER_RADIUS: usa il raggio per collisione più realistica.
+- tx/ty: nuova posizione tentata.
+- ix/iy: cella mappa dove finirebbe.
+- Se tile == '0' o porta aperta → movimento consentito.
+Motivo: evitare attraversamento muri.
+
+12.2 move_forward/backward/lateral_move
+- Usa DIR o PLANE per calcolare passo.
+Motivo: muoversi nella direzione di vista o lateralmente.
+
+12.3 apply_rotation
+- Formula rotazione 2D con sin/cos.
+Motivo: ruotare direzione e piano camera senza cambiare lunghezza vettori.
+
+
+13) RAY CASTING (ray_casting.c, dda_implementation.c)
+
+13.1 init_ray_direction
+- camera_x = 2*x/width - 1:
+  trasforma la colonna in valore [-1,1].
+- rayDir = dir + plane * camera_x:
+  sposta la direzione verso sinistra/destra nel FOV.
+Motivo: ogni colonna ha un raggio diverso.
+
+13.2 init_delta_distance
+- deltaDistX = abs(1 / rayDirX): distanza per attraversare una cella in X.
+- Se rayDirX ~ 0: usa valore enorme per evitare divisione per 0.
+Stesso per Y.
+
+13.3 init_step_side_distance
+- STEP_X/STEP_Y: verso quale direzione muoversi sulla griglia.
+- SIDE_DIST_X/Y: distanza dal punto di partenza al primo bordo cella.
+Motivo: sapere quale lato verrà attraversato per primo.
+
+13.4 perform_dda
+- step_ray ripetuto finché ray->hit.
+- steps < 100: evita loop infiniti.
+
+13.5 step_ray
+- Se SIDE_DIST_X < SIDE_DIST_Y: attraversa un bordo X.
+- Altrimenti attraversa un bordo Y.
+- Aggiorna MAP_X/MAP_Y e side.
+Motivo: simulare il cammino del raggio nella griglia.
+
+13.6 check_collision
+- Se cella è ‘1’: hit.
+- Se cella è ‘D’: hit solo se porta chiusa.
+Motivo: porte aperte sono attraversabili.
+
+13.7 compute_wall_distance
+- Calcola distanza perpendicolare al muro.
+Motivo: evitare effetto “fisheye”.
+
+13.8 compute_wall_drawing
+- line_height = height / wall_distance:
+  più vicino → colonna più alta.
+- draw_start/draw_end: centrati sullo schermo.
+
+
+14) DISEGNO E TEXTURE (draw.c, texture_draw.c, texture_select.c, colours_management.c)
+
+14.1 draw_columns
+- factor = 1 / (1 + 0.05 * distance): più lontano = più scuro.
+- Se side == 1: factor *= 0.7 per ombreggiatura.
+- Disegna cielo, muro, pavimento.
+
+14.2 select_tex_face
+- Se raggio colpisce porta → texture porta.
+- Altrimenti texture muro in base al lato.
+
+14.3 get_tex_x
+- wall_x: punto preciso d’impatto sul muro.
+- tex_x = wall_x * texture_width.
+- Se colpo dal lato opposto, ribalta tex_x.
+Motivo: texture non deve essere specchiata male.
+
+14.4 get_tex_y
+- step = texture_height / line_height.
+- texture_y = (y - draw_start) * step.
+Motivo: mappare correttamente la texture sulla colonna.
+
+14.5 draw_textured_column
+- Per ogni y tra draw_start e draw_end:
+  - calcola tex_x/tex_y.
+  - legge il colore dalla texture.
+  - applica shade_color.
+  - scrive sullo schermo.
+
+14.6 shade_color
+- Moltiplica RGB per factor per scurire.
+Motivo: simulare distanza/luci.
+
+14.7 get_texture_pixel
+- Calcola indirizzo con line_len e bpp.
+- Estrae colore e converte in RGB.
+
+
+15) PORTE E ANIMAZIONI (doors.c, utils.c)
+
+15.1 check_and_toggle_door
+- Per ogni porta: distanza player-porta.
+- Se |pos_x - door_x| < 1.5 e |pos_y - door_y| < 1.5:
+  toggla is_open.
+Motivo: aprire solo se vicino.
+
+15.2 update_door_animations
+- animation cresce o scende verso 0/1.
+- Usa delta_time per velocità costante indipendente dagli FPS.
+
+15.3 get_door_frame_texture
+- frame_idx = animation * frame_count.
+- Restituisce il frame corretto.
+Motivo: animare apertura/chiusura.
+
+
+16) MINIMAP (minimap.c, minimap_utils.c)
+
+16.1 draw_minimap_grid
+- center_x/center_y: centrano la minimap sul player.
+- Disegna celle attorno al player con scala fissa.
+
+16.2 get_minimap_color
+- Fuori mappa → nero.
+- Muro → grigio.
+- Porta → arancione.
+- Spazio → grigio scuro.
+
+16.3 draw_player_indicator
+- Disegna un punto rosso al centro.
+Motivo: indica posizione player.
+
+
+17) FPS (fps.c)
+
+17.1 perf_update
+- now_ms: tempo corrente.
+- dt = now - last_ms.
+- fps_now = 1000 / dt.
+- smoothing con alpha per ridurre oscillazioni.
+
+17.2 draw_fps_overlay
+- Converte fps in stringa e usa mlx_string_put.
+
+
+18) CLEANUP (cleanup.c, cleanup_utils.c)
+
+18.1 cleanup_parsing_fields
+- Libera texture, colori, map, player, parse.
+
+18.2 cleanup_mlx_resources
+- Libera schermo, finestra, display.
+
+18.3 clean_up
+- Chiama cleanup e termina il programma.
+
+
+FINE
