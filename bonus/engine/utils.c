@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 14:42:39 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/04 01:43:35 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/05 18:16:54 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,8 +57,16 @@ void	check_and_toggle_door(t_game *g)
 	{
 		door_x = g->doors[i].x;
 		door_y = g->doors[i].y;
-		if (fabs(POS_X - door_x) < 1.5 && fabs(POS_Y - door_y) < 1.5)
+		if (fabs(POS_X - door_x) < 2.0 && fabs(POS_Y - door_y) < 2.0)
 		{
+			if (g->doors[i].is_open)
+			{
+				if ((int)POS_X == door_x && (int)POS_Y == door_y)
+				{
+					i++;
+					continue;
+				}
+			}
 			g->doors[i].is_open = !g->doors[i].is_open;
 		}
 		i++;
