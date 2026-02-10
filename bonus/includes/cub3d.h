@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/19 14:41:04 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/02/04 15:33:57 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/10 17:32:33 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,6 +101,7 @@ typedef struct s_parse
 	bool	is_south_set;
 	bool	is_west_set;
 	bool	is_east_set;
+	bool	is_box_set;
 	bool	is_floor_set;
 	bool	is_ceiling_set;
 }				t_parse;
@@ -117,6 +118,7 @@ typedef struct s_game
 	t_texture	*tex_south;
 	t_texture	*tex_west;
 	t_texture	*tex_east;
+	t_texture	*tex_box;
 	t_color		*floor;
 	t_color		*wall;
 	t_color		*ceiling;
@@ -128,6 +130,7 @@ typedef struct s_game
 	t_door		*doors;
 	t_texture	**door_frames;
 	int			door_count;
+	t_arms		arms;
 	bool		show_fps;
 	t_perf		perf;
 }				t_game;
@@ -204,6 +207,7 @@ int			parse_north_texture(t_game *game, char *line);
 int			parse_south_texture(t_game *game, char *line);
 int			parse_west_texture(t_game *game, char *line);
 int			parse_east_texture(t_game *game, char *line);
+int			parse_box_texture(t_game *game, char *line);
 // Funzione principale per parsing texture
 int			parse_texture(t_game *game, char *line);
 // Utility aggiuntive texture (parse_texture_utils.c)

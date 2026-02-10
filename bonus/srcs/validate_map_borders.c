@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   validate_map_borders.c                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 15:27:41 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/01/31 16:01:38 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/09 16:40:17 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ static int	flood_fill(t_game *game, char **map_copy, int x, int y)
 		return (-1);
 	}
 	// Se e' una parete o un punto gia' visitato, ritorno
-	if (map_copy[y][x] == '1' || map_copy[y][x] == 'V')
+	if (map_copy[y][x] == '1' || map_copy[y][x] == 'V' || map_copy[y][x] == 'B')
 		return (0);
 	// Controllo se c'e' spazio vuoto - uno spazio raggiungibile è un errore
 	if (map_copy[y][x] == ' ')

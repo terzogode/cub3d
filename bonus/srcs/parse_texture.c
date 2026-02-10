@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parse_texture.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/20 15:54:38 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/01/31 16:38:47 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/09 16:43:16 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,6 +62,8 @@ int	parse_texture(t_game *game, char *line)
 		return (parse_west_texture(game, line));
 	else if (ft_strncmp(&line[i], "EA ", 3) == 0)
 		return (parse_east_texture(game, line));
+	else if (ft_strncmp(&line[i], "B ", 2) == 0)
+		return (parse_box_texture(game, line));
 	// Non dovremmo mai arrivare qui se is_valid_identifier funziona :(
 	// Spero iddio che non lo stampi mai
 	fd_printf(2, "Error: Invalid texture identifier\n");

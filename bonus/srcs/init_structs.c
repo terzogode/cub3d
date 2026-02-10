@@ -44,10 +44,11 @@ bool	struct_init(t_game *g)
 	g->tex_south = initialize_texture();
 	g->tex_west = initialize_texture();
 	g->tex_east = initialize_texture();
+	g->tex_box = initialize_texture();
 	g->parse = initialize_parse();
 	if (!g->map || !g->player || !g->floor || !g->wall || !g->ceiling
-		|| !g->tex_north || !g->tex_south || !g->tex_west 
-		|| !g->tex_east || !g->parse)
+		|| !g->tex_north || !g->tex_south || !g->tex_west
+		|| !g->tex_east || !g->tex_box || !g->parse)
 		return (1);
 	initialize_door_system(g);
 	initialize_mlx_fields(g);

@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 18:49:50 by mattebrighi       #+#    #+#             */
-/*   Updated: 2026/02/05 16:09:17 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/10 19:11:56 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,18 +65,17 @@ static bool	init_walls(t_game *g)
 		return (0);
 	if (!load_single_texture(g, g->tex_east, g->tex_east->path))
 		return (0);
+	if (g->tex_box && g->tex_box->path)
+	{
+		if (!load_single_texture(g, g->tex_box, g->tex_box->path))
+			return (0);
+	}
 	return (1);
 }
 
 static bool	init_doors_text(t_game *g, t_texture **frames)
 {
-	if (!load_single_texture(g, frames[0], "../textures/door_closed.xpm"))
-		return (0);
-	if (!load_single_texture(g, frames[1], "../textures/door_opening1.xpm"))
-		return (0);
-	if (!load_single_texture(g, frames[2], "../textures/door_opening2.xpm"))
-		return (0);
-	if (!load_single_texture(g, frames[3], "../textures/door_open.xpm"))
+	if (!load_single_texture(g, frames[0], "./textures/door_closed.xpm"))
 		return (0);
 	return (1);
 }

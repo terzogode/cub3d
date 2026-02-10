@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cleanup_utils.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/20 13:35:09 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/02/03 17:19:34 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/10 19:12:37 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,22 +74,15 @@ void	free_screen(t_game *game)
 
 void	free_door_frames(t_game *g, t_texture **frames)
 {
-	int	i;
-
 	if (!frames)
 		return ;
-	i = 0;
-	while (i < 4)
+	if (frames[0])
 	{
-		if (frames[i])
-		{
-			if (frames[i]->img && frames[i]->img->img && g->mlx_init)
-				mlx_destroy_image(g->mlx_init, frames[i]->img->img);
-			if (frames[i]->img)
-				free(frames[i]->img);
-			free(frames[i]);
-		}
-		i++;
+		if (frames[0]->img && frames[0]->img->img && g->mlx_init)
+			mlx_destroy_image(g->mlx_init, frames[0]->img->img);
+		if (frames[0]->img)
+			free(frames[0]->img);
+		free(frames[0]);
 	}
 	free(frames);
 }

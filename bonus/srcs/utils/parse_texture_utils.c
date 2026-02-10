@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parse_texture_utils.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/20 17:40:36 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/01/29 17:51:25 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/09 16:43:16 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,5 +76,21 @@ int	parse_east_texture(t_game *game, char *line)
 	if (validate_texture_file(game->tex_east->path) == -1)
 		return (-1);
 	game->parse->is_east_set = true;
+	return (0);
+}
+
+int	parse_box_texture(t_game *game, char *line)
+{
+	if (game->parse->is_box_set)
+	{
+		fd_printf(2, "Error: Duplicate box texture\n");
+		return (-1);
+	}
+	game->tex_box->path = get_texture_path(line, 1);
+	if (!game->tex_box->path)
+		return (-1);
+	if (validate_texture_file(game->tex_box->path) == -1)
+		return (-1);
+	game->parse->is_box_set = true;
 	return (0);
 }

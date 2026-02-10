@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   key_utils.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 20:17:09 by mattebrighi       #+#    #+#             */
-/*   Updated: 2026/01/30 23:49:10 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/10 17:39:05 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,14 +32,7 @@ int	key_release(int keycode, t_game *g)
 void	handle_toggle_keys(int keycode, t_game *g)
 {
 	if (keycode == 'i')
-	{
 		g->show_fps = !g->show_fps;
-		fd_printf(1,"FPS toggle: ");
-		if (g->show_fps)
-			fd_printf(1, "ON");
-		else
-			fd_printf(1, "OFF");
-	}
 }
 
 void	release_movement_keys(int keycode, t_game *g)

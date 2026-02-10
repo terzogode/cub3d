@@ -72,21 +72,16 @@ void	update_door_animations(t_game *g, double delta_time)
 t_texture	*get_door_frame_texture(t_game *g, int x, int y)
 {
 	int		i;
-	int		frame_idx;
-	float	animation;
-	t_texture	*result;
+
 
 	i = 0;
 	while (i < g->door_count)
 	{
 		if (g->doors[i].x == x && g->doors[i].y == y)
 		{
-			animation = g->doors[i].animation;
-			frame_idx = (int)(animation * g->doors[i].frame_count);
-			if (frame_idx >= g->doors[i].frame_count)
-				frame_idx = g->doors[i].frame_count - 1;
-			result = g->doors[i].frames[frame_idx];
-			return (result);
+			if (g->doors[i].is_open)
+				return (NULL);
+			return (g->doors[i].frames[0]);
 		}
 		i++;
 	}

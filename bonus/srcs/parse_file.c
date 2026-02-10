@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parse_file.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/23 17:00:37 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/01/31 15:52:43 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/10 15:47:41 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,11 +18,12 @@ static int	parse_element(t_game *game, char *line)
 	int	i;
 
 	i = skip_spaces(line, 0);
-	// Controllo se è una texture (NO, SO, WE, EA)
+	// Controllo se è una texture (NO, SO, WE, EA, B)
 	if (ft_strncmp(&line[i], "NO ", 3) == 0
 		|| ft_strncmp(&line[i], "SO ", 3) == 0
 		|| ft_strncmp(&line[i], "WE ", 3) == 0
-		|| ft_strncmp(&line[i], "EA ", 3) == 0)
+		|| ft_strncmp(&line[i], "EA ", 3) == 0
+		|| ft_strncmp(&line[i], "B ", 2) == 0)
 		return (parse_texture(game, line));
 	// Controllo se è un colore (F, C)
 	if (ft_strncmp(&line[i], "F ", 2) == 0

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   draw.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 19:07:54 by mattebrighi       #+#    #+#             */
-/*   Updated: 2026/02/04 01:05:56 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/10 15:44:52 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,12 +56,10 @@ void	draw_floor_part(t_game *g, int x, int draw_end)
 void	draw_columns(t_game *g, int x, t_drawing *draw)
 {
 	double	factor;
-	double	distance;
 
 	if (!draw || !draw->ray)
 		return ;
-	distance = WALL_DISTANCE_ARRAY[x];
-	factor = 1.0 / (1.0 + 0.05 * distance);
+	factor = 1.0 / (1.0 + 0.05 * WALL_DISTANCE_ARRAY[x]);
 	if (draw->ray->side == 1)
 		factor = factor * 0.7;
 	draw_ceiling_part(g, x, draw->draw_start);

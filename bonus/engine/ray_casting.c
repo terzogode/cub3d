@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 21:54:28 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/03 21:49:59 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/09 17:56:28 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ void	cast_one_ray(t_game *g, int x)
 	init_step_side_distance(&ray, g);
 	perform_dda(&ray, g);
 	compute_wall_drawing(g->drawing, &ray, g);
-	WALL_DISTANCE_ARRAY[x] = g->drawing->wall_distance;
+	//WALL_DISTANCE_ARRAY[x] = g->drawing->wall_distance;
 	g->drawing->ray = &ray;
 	draw_columns(g, x, g->drawing);
 }

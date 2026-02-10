@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   init_structs_utils.c                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/20 14:57:50 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/02/04 04:37:01 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/10 15:48:03 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,6 +94,7 @@ t_parse	*initialize_parse(void)
 	parse->is_south_set = false;
 	parse->is_west_set = false;
 	parse->is_east_set = false;
+	parse->is_box_set = false;
 	parse->is_floor_set = false;
 	parse->is_ceiling_set = false;
 	return (parse);

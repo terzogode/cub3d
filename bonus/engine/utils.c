@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 14:42:39 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/05 18:16:54 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/10 19:19:01 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,11 +78,11 @@ t_texture	**allocate_door_frames(void)
 	t_texture	**frames;
 	int			i;
 
-	frames = malloc(sizeof(t_texture *) * 4);
+	frames = malloc(sizeof(t_texture *) * 1);
 	if (!frames)
 		return (NULL);
 	i = 0;
-	while (i < 4)
+	while (i < 1)
 	{
 		frames[i] = malloc(sizeof(t_texture));
 		if (!frames[i])

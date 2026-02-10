@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   identify_elements.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/20 15:22:07 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/01/31 15:21:53 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/09 16:48:10 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,6 +54,12 @@ int	find_map_start(t_game *game)
 		}
 		if (elem_found == 6)
 			return (handle_map_found(game, i));
+		if (ft_strncmp(&game->parse->file_lines[i][skip_spaces(
+			game->parse->file_lines[i], 0)], "B ", 2) == 0)
+		{
+			i++;
+			continue ;
+		}
 		if (is_valid_identifier(game->parse->file_lines[i]))
 		{
 			elem_found++;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   extract_map.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 14:00:54 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/01/31 15:32:37 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/09 16:43:16 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ static int	is_map_line(char *line)
 	{
 		if (line[i] != '0' && line[i] != '1' && line[i] != 'N'
 			&& line[i] != 'S' && line[i] != 'E' && line[i] != 'W'
+			&& line[i] != 'D' && line[i] != 'B'
 			&& line[i] != ' ' && line[i] != '\t' && line[i] != '\n')
 			return (0);
 		i++;

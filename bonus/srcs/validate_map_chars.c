@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   validate_map_chars.c                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 14:46:50 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/02/04 00:41:04 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/09 16:48:10 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,12 @@ static int	validate_char_and_check_player(t_game *game, int x, int y)
 	{
 		fd_printf(2, "Error: Invalid character '%c' in map at position"
 			"(%d, %d)\n", game->map->grid[y][x], x, y);
+		return (-1);
+	}
+	if (game->map->grid[y][x] == 'B' && !game->parse->is_box_set)
+	{
+		fd_printf(2, "Error: Box texture not set but 'B' found in map at "
+			"(%d, %d)\n", x, y);
 		return (-1);
 	}
 	// Check se e' il player

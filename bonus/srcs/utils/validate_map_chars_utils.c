@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   validate_map_chars_utils.c                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 15:16:51 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/02/04 00:41:04 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/09 16:42:09 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 bool	is_valid_map_char(char c)
 {
-	if (c == '0' || c == '1' || c == ' ' || c == 'D'
+	if (c == '0' || c == '1' || c == ' ' || c == 'D' || c == 'B'
 		|| c == 'N' || c == 'S' || c == 'E' || c == 'W')
 		return (true);
 	return (false);

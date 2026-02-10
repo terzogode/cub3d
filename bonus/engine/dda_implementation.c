@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   dda_implementation.c                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 21:54:00 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/04 01:36:36 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/09 16:43:16 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,8 @@ void	check_collision(t_ray *ray, t_game *g)
 	if (MAP_X < 0 || MAP_X >= g->map->width
 		|| MAP_Y < 0 || MAP_Y >= g->map->height)
 		return ;
-	if (MAP_MATRIX[MAP_Y][MAP_X] == '1')
+	if (MAP_MATRIX[MAP_Y][MAP_X] == '1'
+		|| MAP_MATRIX[MAP_Y][MAP_X] == 'B')
 	{
 		ray->hit = 1;
 	}

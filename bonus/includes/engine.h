@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 21:54:41 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/04 15:38:26 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/10 19:11:56 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,9 @@ typedef struct	s_texture t_texture;
 # define MAX_RAY_DISTANCE 50.0
 # define MOUSE_SENSITIVITY 0.003
 # define MAX_DOORS 20
+# define ARMS_FRAME_TIME 0.06
+# define ARMS_TRANSPARENT 0xFF00FF
+
 
 # define HEIGHT					g->map->height
 # define WIDTH					g->map->width
@@ -76,10 +79,21 @@ typedef struct s_door
 	int			y;
 	char		orientation;
 	bool		is_open;
-	t_texture	*frames[4];
+	t_texture	*frames[1];
 	int			frame_count;
 	float		animation;
 }			t_door;
+
+typedef struct s_arms
+{
+	t_texture	*frames[4];
+	int			frame_count;
+	int			frame_idx;
+	int			anim_dir;
+	int			anim_active;
+	int			key_down;
+	double		anim_time;
+}			t_arms;
 
 # define SIDE_DIST_X	ray->sideDistX
 # define SIDE_DIST_Y	ray->sideDistY
@@ -92,6 +106,14 @@ typedef struct s_door
 # define DELTA_DIST_X	ray->deltaDistX
 # define DELTA_DIST_Y	ray->deltaDistY
 
+//arms.c
+void	trigger_arms_animation(t_game *g);
+void	update_arms_animation(t_game *g, double dt);
+void	draw_arms_overlay(t_game *g);
+void	free_arms_frames(t_game *g, t_texture **frames);
+void	init_arms(t_game *g);
+
+
 //clean_up.c
 void		destroy_mlx_image(t_game *g);
 void		destroy_doors(t_game *g);
@@ -99,6 +121,7 @@ void		free_struct(t_game *g);
 void		free_wall_image(t_game *g);
 int			clean_up(t_game *g);
 void		free_door_frames(t_game *g, t_texture **frames);
+void		free_arms_frames(t_game *g, t_texture **frames);
 
 
 // colours_management.c
@@ -141,7 +164,7 @@ void		init_game(t_game *g);
 void		init_mlx(t_game *g);
 void		init_doors(t_game *g, t_texture **door_frames);
 void		init_single_door(t_door *door, int x, int y,
-				t_texture **door_frames, t_game *g);
+				t_texture **door_frames);
 
 
 // key_management.c
@@ -193,6 +216,11 @@ void		put_pixel(t_image *img, int x, int y, t_color color);
 void		init_color(t_game *g);
 void		check_and_toggle_door(t_game *g);
 t_texture	**allocate_door_frames(void);
+
+// arms.c
+void		update_arms_animation(t_game *g, double delta_time);
+void		draw_arms_overlay(t_game *g);
+void		trigger_arms_animation(t_game *g);
 
 //doors.c
 bool		is_door_open(t_game *g, int x, int y);

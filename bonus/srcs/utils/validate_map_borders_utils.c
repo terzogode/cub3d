@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   validate_map_borders_utils.c                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 19:05:00 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/01/31 18:16:08 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/09 16:43:16 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,8 @@ int	check_top_bottom_borders(t_game *game)
 			while (x < game->map->width && game->map->grid[y][x])
 			{
 				if (game->map->grid[y][x] != '1'
-					&& game->map->grid[y][x] != ' ')
+					&& game->map->grid[y][x] != ' '
+					&& game->map->grid[y][x] != 'B')
 				{
 					fd_printf(2, "Error: Map border not closed at (%d, %d)"
 						" - found '%c'\n", x, y, game->map->grid[y][x]);
@@ -87,7 +88,9 @@ int	check_left_right_borders(t_game *game)
 	y = 0;
 	while (y < game->map->height)
 	{
-		if (game->map->grid[y][0] != '1' && game->map->grid[y][0] != ' ')
+		if (game->map->grid[y][0] != '1'
+			&& game->map->grid[y][0] != ' '
+			&& game->map->grid[y][0] != 'B')
 		{
 			fd_printf(2, "Error: Map border not closed at (0, %d)"
 				"- found '%c'\n", y, game->map->grid[y][0]);
@@ -96,7 +99,9 @@ int	check_left_right_borders(t_game *game)
 		x = game->map->width - 1;
 		if (x >= 0 && x < (int)ft_strlen(game->map->grid[y]))
 		{
-			if (game->map->grid[y][x] != '1' && game->map->grid[y][x] != ' ')
+			if (game->map->grid[y][x] != '1'
+				&& game->map->grid[y][x] != ' '
+				&& game->map->grid[y][x] != 'B')
 			{
 				fd_printf(2, "Error: Map border not closed at (%d, %d)"
 					" - found '%c'\n", x, y, game->map->grid[y][x]);

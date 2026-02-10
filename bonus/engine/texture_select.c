@@ -19,7 +19,7 @@ static char	get_side_type(int side)
 	return ('H');
 }
 
-static t_texture	*get_matching_door(t_game *g, int x, int y, char side_type)
+static t_texture	*get_match_door(t_game *g, int x, int y, char side_type)
 {
 	int	i;
 
@@ -45,16 +45,25 @@ static t_texture	*select_door_texture(t_drawing *draw, t_game *g)
 		return (NULL);
 	if (MAP_MATRIX[door_y][door_x] != 'D')
 		return (NULL);
-	return (get_matching_door(g, door_x, door_y, get_side_type(draw->ray->side)));
+	return (get_match_door(g, door_x, door_y, get_side_type(draw->ray->side)));
 }
 
 t_texture	*select_tex_face(t_drawing *draw, t_game *g)
 {
 	t_texture	*door_tex;
+	int			x;
+	int			y;
 
 	door_tex = select_door_texture(draw, g);
 	if (door_tex)
 		return (door_tex);
+	x = draw->ray->mapX;
+	y = draw->ray->mapY;
+	if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
+	{
+		if (MAP_MATRIX[y][x] == 'B')
+			return (g->tex_box);
+	}
 	if (draw->ray->side == 0)
 	{
 		if (draw->ray->rayDirX > 0)

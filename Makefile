@@ -83,6 +83,8 @@ SRCS_PARS_BONUS	= bonus/main.c \
 			  $(SRC_DIR_BONUS)/utils/cleanup_utils.c
 
 SRCS_ENG_BONUS	= $(ENG_DIR_BONUS)/init.c \
+			  $(ENG_DIR_BONUS)/arms.c \
+			  $(ENG_DIR_BONUS)/arms_utils.c \
 			  $(ENG_DIR_BONUS)/utils.c \
 			  $(ENG_DIR_BONUS)/doors.c \
 			  $(ENG_DIR_BONUS)/door_init.c \

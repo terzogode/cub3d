@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main_rendering.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 21:54:17 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/04 00:44:31 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/10 18:09:31 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,9 @@ int	loop_hook(t_game *g)
 
 	perf_update(&g->perf);
 	delta_time = (g->perf.last_ms - g->perf.last_draw_ms) / 1000.0;
+	g->perf.last_draw_ms = g->perf.last_ms;
 	update_door_animations(g, delta_time);
+	update_arms_animation(g, delta_time);
 	rendering(g);
 	mlx_put_image_to_window(g->mlx_init, g->win, g->screen->img, 0, 0);
 	if (g->show_fps)
@@ -40,6 +42,7 @@ void	rendering(t_game *g)
 		i++;
 	}
 	draw_minimap(g);
+	draw_arms_overlay(g);
 }
 
 

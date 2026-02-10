@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cleanup.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/19 17:30:59 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/02/04 04:14:22 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/10 18:53:04 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,8 @@ void	cleanup_parsing_fields(t_game *game)
 	free_texture(game, game->tex_south);
 	free_texture(game, game->tex_west);
 	free_texture(game, game->tex_east);
+	free_texture(game, game->tex_box);
+	free_arms_frames(game, game->arms.frames);
 	destroy_doors(game);
 	if (game->floor)
 		free(game->floor);

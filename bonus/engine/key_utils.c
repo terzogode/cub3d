@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   key_utils.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 20:17:09 by mattebrighi       #+#    #+#             */
-/*   Updated: 2026/02/04 02:02:33 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/10 17:54:38 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,22 +26,23 @@ int	key_release(int keycode, t_game *g)
 	release_rotation_keys(keycode, g);
 	if (keycode == 'm')
 		g->player->m_key_down = 0;
+	if (keycode == 'f')
+		g->arms.key_down = 0;
 	return (0);
 }
 
 void	handle_toggle_keys(int keycode, t_game *g)
 {
 	if (keycode == 'i')
-	{
 		g->show_fps = !g->show_fps;
-		fd_printf(1,"FPS toggle: ");
-		if (g->show_fps)
-			fd_printf(1, "ON");
-		else
-			fd_printf(1, "OFF");
-	}
 	if (keycode == 'f')
+	{
+		if (g->arms.key_down)
+			return ;
+		g->arms.key_down = 1;
+		trigger_arms_animation(g);
 		check_and_toggle_door(g);
+	}
 }
 
 void	release_movement_keys(int keycode, t_game *g)
