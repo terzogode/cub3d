@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   colours_management.c                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 21:53:49 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/01/30 23:28:15 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/11 21:25:57 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ t_color	shade_color(t_color col, double factor)
 	return (col);
 }
 
-int	get_tex_x(t_ray *ray, t_game *g, int side, t_image *texture,
+int	get_tex_x(t_ray *ray, t_game *g, t_image *texture,
 		double wall_distance)
 {
 	double	wall_x;
@@ -35,7 +35,7 @@ int	get_tex_x(t_ray *ray, t_game *g, int side, t_image *texture,
 
 	if (!texture || !texture->img || texture->width == 0)
 		return (0);
-	if (side == 0)
+	if (ray->side == 0)
 		wall_x = POS_Y + wall_distance * RAY_DIR_Y;
 	else
 		wall_x = POS_X + wall_distance * RAY_DIR_X;
@@ -43,9 +43,9 @@ int	get_tex_x(t_ray *ray, t_game *g, int side, t_image *texture,
 	if (wall_x < 0.0)
 		wall_x += 1.0;
 	tex_x = (int)(wall_x * texture->width);
-	if (side == 0 && RAY_DIR_X > 0)
+	if (ray->side == 0 && RAY_DIR_X > 0)
 		tex_x = texture->width - tex_x - 1;
-	if (side == 1 && RAY_DIR_Y < 0)
+	if (ray->side == 1 && RAY_DIR_Y < 0)
 		tex_x = texture->width - tex_x - 1;
 	return (tex_x);
 }

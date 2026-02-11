@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main_rendering.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 21:54:17 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/03 01:16:59 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/11 21:20:25 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ int	loop_hook(t_game *g)
 
 void	rendering(t_game *g)
 {
-	int		i;
+	int	i;
 
 	i = 0;
 	ft_memset(g->screen->addr, 0, g->screen->line_len * g->height);
@@ -36,5 +36,3 @@ void	rendering(t_game *g)
 		i++;
 	}
 }
-
-

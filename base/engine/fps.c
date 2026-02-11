@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 22:10:00 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/03 21:49:59 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 21:20:55 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,8 +76,8 @@ void	draw_fps_overlay(t_game *g)
 {
 	static double	last_update = 0.0;
 	static double	buffered_fps = 0.0;
-	char	*fps_num;
-	char	*fps_str;
+	char			*fps_num;
+	char			*fps_str;
 
 	if (!g || !g->mlx_init || !g->win)
 		return ;

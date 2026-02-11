@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub3d.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/19 14:41:04 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/02/11 18:02:21 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/11 21:18:04 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,10 +67,6 @@ typedef struct s_player
 	int		rotate_left;
 	int		rotate_right;
 	double	*columns_distance;
-	int		last_mouse_x;
-	int		mouse_enabled;
-	int		m_key_down;
-	int		ignore_next_mouse;
 }				t_player;
 
 // Struttura per tracciare performance e FPS

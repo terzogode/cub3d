@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 20:17:09 by mattebrighi       #+#    #+#             */
-/*   Updated: 2026/02/10 17:39:05 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 21:09:24 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,6 @@ int	key_release(int keycode, t_game *g)
 {
 	release_movement_keys(keycode, g);
 	release_rotation_keys(keycode, g);
-	if (keycode == 'm')
-		g->player->m_key_down = 0;
 	return (0);
 }
 

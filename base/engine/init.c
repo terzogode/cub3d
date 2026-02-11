@@ -14,7 +14,7 @@
 
 void	init_game(t_game *g)
 {
-	int i;
+	int	i;
 
 	i = 0;
 	init_color(g);
@@ -24,7 +24,7 @@ void	init_game(t_game *g)
 		fd_printf(2, "Error: Failed to allocate columns_distance\n");
 		clean_up(g);
 	}
-	while(i < g->width)
+	while (i < g->width)
 	{
 		g->player->columns_distance[i] = 0;
 		i++;
@@ -47,7 +47,6 @@ void	init_mlx(t_game *g)
 		exit(1);
 	}
 	g->win = mlx_new_window(g->mlx_init, g->width, g->height, "cub3D");
-	mlx_mouse_hide(g->mlx_init, g->win);
 	g->screen = malloc(sizeof(t_image));
 	if (!g->screen)
 		clean_up(g);
@@ -59,8 +58,8 @@ void	init_mlx(t_game *g)
 	}
 	g->screen->width = g->width;
 	g->screen->height = g->height;
-	g->screen->addr = mlx_get_data_addr(g->screen->img,
-		&g->screen->bpp, &g->screen->line_len, &g->screen->endian);
+	g->screen->addr = mlx_get_data_addr(g->screen->img, &g->screen->bpp,
+			&g->screen->line_len, &g->screen->endian);
 	if (!g->screen->addr)
 		clean_up(g);
 	g->pix = (t_color *)g->screen->addr;

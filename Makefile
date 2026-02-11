@@ -50,10 +50,10 @@ SRCS_ENG		=  $(ENG_DIR)/init.c \
 			  $(ENG_DIR)/utils.c \
 			  $(ENG_DIR)/key_management.c \
 			  $(ENG_DIR)/key_utils.c \
-			  $(ENG_DIR)/mouse_management.c \
 			  $(ENG_DIR)/move_management.c \
 			  $(ENG_DIR)/rotation.c \
 			  $(ENG_DIR)/ray_casting.c \
+			  $(ENG_DIR)/ray_casting_utils.c \
 			  $(ENG_DIR)/dda_implementation.c \
 			  $(ENG_DIR)/colours_management.c \
 			  $(ENG_DIR)/draw.c \

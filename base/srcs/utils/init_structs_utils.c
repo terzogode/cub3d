@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   init_structs_utils.c                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/20 14:57:50 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/02/04 04:36:24 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/11 21:18:04 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,10 +73,6 @@ t_player	*initialize_player(void)
 	player->rotate_left = 0;
 	player->rotate_right = 0;
 	player->columns_distance = NULL;
-	player->last_mouse_x = 0;
-	player->mouse_enabled = 0;
-	player->m_key_down = 0;
-	player->ignore_next_mouse = 0;
 	return (player);
 }
 

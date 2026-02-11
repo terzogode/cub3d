@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 21:54:41 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/04 15:37:59 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 21:25:57 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,6 @@ typedef struct	s_texture t_texture;
 # define ROT_SPEED  0.07
 # define PLAYER_RADIUS 0.20
 # define MAX_RAY_DISTANCE 50.0
-# define MOUSE_SENSITIVITY 0.003
 
 # define HEIGHT					g->map->height
 # define WIDTH					g->map->width
@@ -87,7 +86,7 @@ int			clean_up(t_game *g);
 
 // colours_management.c
 t_color		shade_color(t_color col, double factor);
-int			get_tex_x(t_ray *ray, t_game *g, int side, t_image *texture,
+int			get_tex_x(t_ray *ray, t_game *g, t_image *texture,
 				double wall_distance);
 int			get_tex_y(int y, t_drawing *draw, t_image *tex);
 t_color		get_texture_pixel(t_image *tex, int tex_x, int tex_y, t_game *g);
@@ -116,7 +115,6 @@ void		draw_fps_overlay(t_game *g);
 void		init_game(t_game *g);
 void		init_mlx(t_game *g);
 
-
 // key_management.c
 void		handle_movement_keys(int keycode, t_game *g);
 void		handle_rotation_keys(int keycode, t_game *g);
@@ -132,10 +130,6 @@ void		release_movement_keys(int keycode, t_game *g);
 // main_rendering.c
 int			loop_hook(t_game *g);
 void		rendering(t_game *g);
-
-// mouse_management.c
-int			mouse_move(int x, int y, t_game *g);
-void		recenter_mouse_if_needed(t_game *g, int x);
 
 // move_management.c
 void		move_forward(t_game *g);
@@ -164,6 +158,8 @@ void		init_textures(t_game *g);
 // utils.c
 void		put_pixel(t_image *img, int x, int y, t_color color);
 void		init_color(t_game *g);
+t_texture	*select_tex_face(t_drawing *draw, t_game *g);
+
 
 bool		struct_init(t_game *g);
 void		init_game(t_game *g);

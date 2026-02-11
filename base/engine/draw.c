@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   draw.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 19:07:54 by mattebrighi       #+#    #+#             */
-/*   Updated: 2026/02/03 01:16:59 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/11 21:25:57 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,68 +27,26 @@ void	draw_ceiling_part(t_game *g, int x, int draw_start)
 	}
 }
 
-t_texture	*select_tex_face(t_drawing *draw, t_game *g)
-{
-	if (draw->ray->side == 0)
-	{
-		if (draw->ray->rayDirX > 0)
-			return (g->tex_east);
-		return (g->tex_west);
-	}
-	if (draw->ray->rayDirY > 0)
-		return (g->tex_south);
-	return (g->tex_north);
-}
-
-void	draw_textured_column(t_game *g, int x, t_drawing *draw,
-		t_texture *tex_face, double factor)
+void	draw_wall_part(t_game *g, int x, t_drawing *draw, double factor)
 {
 	int			y;
 	int			tex_x;
-	double		tex_pos;
-	double		step;
-	t_image		*img;
-
-	img = tex_face->img;
-	if (draw->line_height <= 0)
-		return ;
-	tex_x = get_tex_x(draw->ray, g, draw->ray->side, img, draw->wall_distance);
-	step = (double)img->height / (double)draw->line_height;
-	tex_pos = (draw->draw_start - g->height / 2 + draw->line_height / 2) * step;
-	y = draw->draw_start;
-	while (y <= draw->draw_end)
-	{
-		put_pixel(g->screen, x, y,
-			shade_color(get_texture_pixel(img, tex_x, (int)tex_pos, g),
-			factor));
-		tex_pos += step;
-		y++;
-	}
-}
-
-void	draw_solid_column(t_game *g, int x, t_drawing *draw, double factor)
-{
-	int		y;
-	t_color	pixel;
-
-	y = draw->draw_start;
-	while (y <= draw->draw_end)
-	{
-		pixel = shade_color(*g->wall, factor);
-		put_pixel(g->screen, x, y, pixel);
-		y++;
-	}
-}
-
-void		draw_wall_part(t_game *g, int x, t_drawing *draw, double factor)
-{
+	int			tex_y;
 	t_texture	*tex_face;
 
 	tex_face = select_tex_face(draw, g);
-	if (tex_face && tex_face->img)
-		draw_textured_column(g, x, draw, tex_face, factor);
-	else
-		draw_solid_column(g, x, draw, factor);
+	if (!tex_face || !tex_face->img || draw->line_height <= 0)
+		return ;
+	tex_x = get_tex_x(draw->ray, g, tex_face->img, draw->wall_distance);
+	y = draw->draw_start;
+	while (y <= draw->draw_end)
+	{
+		tex_y = get_tex_y(y, draw, tex_face->img);
+		put_pixel(g->screen, x, y,
+			shade_color(get_texture_pixel(tex_face->img, tex_x, tex_y, g),
+				factor));
+		y++;
+	}
 }
 
 void	draw_floor_part(t_game *g, int x, int draw_end)

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   key_management.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 20:48:21 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/03 01:17:00 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/11 21:18:04 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,17 +39,5 @@ int	key_press(int keycode, t_game *g)
 	handle_movement_keys(keycode, g);
 	handle_rotation_keys(keycode, g);
 	handle_toggle_keys(keycode, g);
-	if (keycode == 'm')
-	{
-		if (g->player->m_key_down)
-			return (0);
-		g->player->m_key_down = 1;
-		g->player->mouse_enabled = !g->player->mouse_enabled;
-		g->player->last_mouse_x = g->width / 2;
-		if (g->player->mouse_enabled)
-			mlx_mouse_hide(g->mlx_init, g->win);
-		else
-			mlx_mouse_show(g->mlx_init, g->win);
-	}
 	return (0);
 }
