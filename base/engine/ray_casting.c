@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 21:54:28 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/11 21:24:17 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 23:04:26 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ void	compute_wall_drawing(t_drawing *draw, t_ray *ray, t_game *g)
 	{
 		draw->wall_distance = 1000.0;
 		draw->line_height = 0;
+		draw->wall_top = g->height / 2;
 		draw->draw_start = g->height / 2;
 		draw->draw_end = g->height / 2 - 1;
 	}
@@ -27,7 +28,8 @@ void	compute_wall_drawing(t_drawing *draw, t_ray *ray, t_game *g)
 		if (draw->wall_distance <= 0.0)
 			draw->wall_distance = 0.01;
 		draw->line_height = g->height / draw->wall_distance;
-		draw->draw_start = -draw->line_height / 2 + g->height / 2;
+		draw->wall_top = -draw->line_height / 2 + g->height / 2;
+		draw->draw_start = draw->wall_top;
 		if (draw->draw_start < 0)
 			draw->draw_start = 0;
 		draw->draw_end = draw->line_height / 2 + g->height / 2;
@@ -46,7 +48,7 @@ void	cast_one_ray(t_game *g, int x)
 	init_step_side_distance(&ray, g);
 	perform_dda(&ray, g);
 	compute_wall_drawing(g->drawing, &ray, g);
-	WALL_DISTANCE_ARRAY[x] = g->drawing->wall_distance;
+	g->player->columns_distance[x] = g->drawing->wall_distance;
 	g->drawing->ray = &ray;
 	draw_columns(g, x, g->drawing);
 }

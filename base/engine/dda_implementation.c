@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 21:54:00 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/03 21:33:43 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 23:00:51 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,26 +14,26 @@
 
 void	step_ray(t_ray *ray)
 {
-	if (SIDE_DIST_X < SIDE_DIST_Y)
+	if (ray->side_dist_x < ray->side_dist_y)
 	{
-		SIDE_DIST_X += DELTA_DIST_X;
-		MAP_X += STEP_X;
+		ray->side_dist_x += ray->delta_dist_x;
+		ray->map_x += ray->step_x;
 		ray->side = 0;
 	}
 	else
 	{
-		SIDE_DIST_Y += DELTA_DIST_Y;
-		MAP_Y += STEP_Y;
+		ray->side_dist_y += ray->delta_dist_y;
+		ray->map_y += ray->step_y;
 		ray->side = 1;
 	}
 }
 
 void	check_collision(t_ray *ray, t_game *g)
 {
-	if (MAP_X < 0 || MAP_X >= g->map->width
-		|| MAP_Y < 0 || MAP_Y >= g->map->height)
+	if (ray->map_x < 0 || ray->map_x >= g->map->width
+		|| ray->map_y < 0 || ray->map_y >= g->map->height)
 		return ;
-	if (MAP_MATRIX[MAP_Y][MAP_X] == '1')
+	if (g->map->grid[ray->map_y][ray->map_x] == '1')
 		ray->hit = 1;
 }
 
@@ -55,7 +55,9 @@ void	perform_dda(t_ray *ray, t_game *g)
 double	compute_wall_distance(t_ray *ray, t_game *g)
 {
 	if (ray->side == 0)
-		return (fabs((MAP_X - POS_X + (1 - STEP_X) / 2) / RAY_DIR_X));
+		return (fabs((ray->map_x - g->player->pos_x
+					+ (1 - ray->step_x) / 2) / ray->ray_dir_x));
 	else
-		return (fabs((MAP_Y - POS_Y + (1 - STEP_Y) / 2) / RAY_DIR_Y));
+		return (fabs((ray->map_y - g->player->pos_y
+					+ (1 - ray->step_y) / 2) / ray->ray_dir_y));
 }

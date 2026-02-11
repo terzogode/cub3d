@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 14:42:39 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/11 21:18:54 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 22:47:19 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,11 +48,11 @@ t_texture	*select_tex_face(t_drawing *draw, t_game *g)
 {
 	if (draw->ray->side == 0)
 	{
-		if (draw->ray->rayDirX > 0)
+		if (draw->ray->ray_dir_x > 0)
 			return (g->tex_east);
 		return (g->tex_west);
 	}
-	if (draw->ray->rayDirY > 0)
+	if (draw->ray->ray_dir_y > 0)
 		return (g->tex_south);
 	return (g->tex_north);
 }

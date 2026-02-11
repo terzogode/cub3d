@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/11 21:23:56 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/11 21:25:00 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 23:06:11 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,48 +17,52 @@ void	init_ray_direction(t_ray *ray, t_game *g, int x)
 	double	camera_x;
 
 	camera_x = 2.0 * x / (double)g->width - 1.0;
-	RAY_DIR_X = DIR_X + PLANE_X * camera_x;
-	RAY_DIR_Y = DIR_Y + PLANE_Y * camera_x;
+	ray->ray_dir_x = g->player->dir_x + g->player->plane_x * camera_x;
+	ray->ray_dir_y = g->player->dir_y + g->player->plane_y * camera_x;
 }
 
 void	init_ray_map(t_ray *ray, t_game *g)
 {
-	MAP_X = (int)POS_X;
-	MAP_Y = (int)POS_Y;
+	ray->map_x = (int)g->player->pos_x;
+	ray->map_y = (int)g->player->pos_y;
 }
 
 void	init_delta_distance(t_ray *ray)
 {
-	if (fabs(RAY_DIR_X) < 1e-12)
-		DELTA_DIST_X = 1e30;
+	if (fabs(ray->ray_dir_x) < 1e-12)
+		ray->delta_dist_x = 1e30;
 	else
-		DELTA_DIST_X = fabs(1 / RAY_DIR_X);
-	if (fabs(RAY_DIR_Y) < 1e-12)
-		DELTA_DIST_Y = 1e30;
+		ray->delta_dist_x = fabs(1 / ray->ray_dir_x);
+	if (fabs(ray->ray_dir_y) < 1e-12)
+		ray->delta_dist_y = 1e30;
 	else
-		DELTA_DIST_Y = fabs(1 / RAY_DIR_Y);
+		ray->delta_dist_y = fabs(1 / ray->ray_dir_y);
 }
 
 void	init_step_side_distance(t_ray *ray, t_game *g)
 {
-	if (RAY_DIR_X < 0)
+	if (ray->ray_dir_x < 0)
 	{
-		STEP_X = -1;
-		SIDE_DIST_X = (POS_X - MAP_X) * DELTA_DIST_X;
+		ray->step_x = -1;
+		ray->side_dist_x = (g->player->pos_x - ray->map_x)
+			* ray->delta_dist_x;
 	}
 	else
 	{
-		STEP_X = 1;
-		SIDE_DIST_X = (MAP_X + 1.0 - POS_X) * DELTA_DIST_X;
+		ray->step_x = 1;
+		ray->side_dist_x = (ray->map_x + 1.0 - g->player->pos_x)
+			* ray->delta_dist_x;
 	}
-	if (RAY_DIR_Y < 0)
+	if (ray->ray_dir_y < 0)
 	{
-		STEP_Y = -1;
-		SIDE_DIST_Y = (POS_Y - MAP_Y) * DELTA_DIST_Y;
+		ray->step_y = -1;
+		ray->side_dist_y = (g->player->pos_y - ray->map_y)
+			* ray->delta_dist_y;
 	}
 	else
 	{
-		STEP_Y = 1;
-		SIDE_DIST_Y = (MAP_Y + 1.0 - POS_Y) * DELTA_DIST_Y;
+		ray->step_y = 1;
+		ray->side_dist_y = (ray->map_y + 1.0 - g->player->pos_y)
+			* ray->delta_dist_y;
 	}
 }
