@@ -32,12 +32,12 @@ void	init_doors(t_game *g, t_texture **door_frames)
 	if (!g->doors)
 		clean_up(g);
 	y = 0;
-	while (y < HEIGHT)
+	while (y < g->map->height)
 	{
 		x = 0;
-		while (x < WIDTH)
+		while (x < g->map->width)
 		{
-			if (MAP_MATRIX[y][x] == 'D')
+			if (g->map->grid[y][x] == 'D')
 			{
 				if (g->door_count >= MAX_DOORS)
 					clean_up(g);

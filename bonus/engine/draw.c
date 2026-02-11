@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 19:07:54 by mattebrighi       #+#    #+#             */
-/*   Updated: 2026/02/11 21:40:20 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 23:16:32 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ void	draw_columns(t_game *g, int x, t_drawing *draw)
 
 	if (!draw || !draw->ray)
 		return ;
-	factor = 1.0 / (1.0 + 0.05 * WALL_DISTANCE_ARRAY[x]);
+	factor = 1.0 / (1.0 + 0.05 * g->player->columns_distance[x]);
 	if (draw->ray->side == 1)
 		factor = factor * 0.7;
 	draw_ceiling_part(g, x, draw->draw_start);

@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 21:53:49 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/11 22:04:52 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 23:31:08 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,16 +36,16 @@ int	get_tex_x(t_ray *ray, t_game *g, t_image *texture,
 	if (!texture || !texture->img || texture->width == 0)
 		return (0);
 	if (ray->side == 0)
-		wall_x = POS_Y + wall_distance * RAY_DIR_Y;
+		wall_x = g->player->pos_y + wall_distance * ray->ray_dir_y;
 	else
-		wall_x = POS_X + wall_distance * RAY_DIR_X;
+		wall_x = g->player->pos_x + wall_distance * ray->ray_dir_x;
 	wall_x = wall_x - (int)wall_x;
 	if (wall_x < 0.0)
 		wall_x += 1.0;
 	tex_x = (int)(wall_x * texture->width);
-	if (ray->side == 0 && RAY_DIR_X > 0)
+	if (ray->side == 0 && ray->ray_dir_x > 0)
 		tex_x = texture->width - tex_x - 1;
-	if (ray->side == 1 && RAY_DIR_Y < 0)
+	if (ray->side == 1 && ray->ray_dir_y < 0)
 		tex_x = texture->width - tex_x - 1;
 	return (tex_x);
 }
@@ -79,4 +79,23 @@ t_color	get_texture_pixel(t_image *tex, int tex_x, int tex_y, t_game *g)
 	color.green = (pixel_value / 256) % 256;
 	color.blue = pixel_value % 256;
 	return (color);
+}
+
+void	init_color(t_game *g)
+{
+	g->floor->red = 100;
+	g->floor->green = 100;
+	g->floor->blue = 100;
+	g->floor->hex = g->floor->red * 65536
+		+ g->floor->green * 256 + g->floor->blue;
+	g->ceiling->red = 200;
+	g->ceiling->green = 200;
+	g->ceiling->blue = 200;
+	g->ceiling->hex = g->ceiling->red * 65536
+		+ g->ceiling->green * 256 + g->ceiling->blue;
+	g->wall->red = 255;
+	g->wall->green = 0;
+	g->wall->blue = 0;
+	g->wall->hex = g->wall->red * 65536
+		+ g->wall->green * 256 + g->wall->blue;
 }

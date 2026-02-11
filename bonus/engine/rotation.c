@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 19:41:21 by mattebrighi       #+#    #+#             */
-/*   Updated: 2026/02/11 21:33:17 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 23:23:54 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,10 +25,14 @@ void	apply_rotation(t_game *g, double angle)
 	double	old_dir_x;
 	double	old_plane_x;
 
-	old_dir_x = DIR_X;
-	DIR_X = DIR_X * cos(angle) - DIR_Y * sin(angle);
-	DIR_Y = old_dir_x * sin(angle) + DIR_Y * cos(angle);
-	old_plane_x = PLANE_X;
-	PLANE_X = PLANE_X * cos(angle) - PLANE_Y * sin(angle);
-	PLANE_Y = old_plane_x * sin(angle) + PLANE_Y * cos(angle);
+	old_dir_x = g->player->dir_x;
+	g->player->dir_x = g->player->dir_x * cos(angle)
+		- g->player->dir_y * sin(angle);
+	g->player->dir_y = old_dir_x * sin(angle)
+		+ g->player->dir_y * cos(angle);
+	old_plane_x = g->player->plane_x;
+	g->player->plane_x = g->player->plane_x * cos(angle)
+		- g->player->plane_y * sin(angle);
+	g->player->plane_y = old_plane_x * sin(angle)
+		+ g->player->plane_y * cos(angle);
 }

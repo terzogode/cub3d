@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/19 15:33:54 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/02/04 04:52:22 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/11 23:12:25 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,20 +14,15 @@
 
 int	main(int ac, char **av)
 {
-	t_game	g = {0};
+	t_game	g;
 
+	g = (t_game){0};
 	if (validate_input(ac, av) == -1)
 		return (1);
 	if (struct_init(&g))
-	{
-		cleanup_game_fields(&g);
-		return (1);
-	}
+		return (cleanup_game_fields(&g), 1);
 	if (parse_file(&g, av[1]) == -1)
-	{
-		cleanup_game_fields(&g);
-		return (1);
-	}
+		return (cleanup_game_fields(&g), 1);
 	if (validate_map(&g) == -1)
 		return (cleanup_game_fields(&g), 1);
 	init_game(&g);

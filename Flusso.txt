@@ -1,0 +1,1899 @@
+FLUSSO DEL PROGRAMMA BONUS - CUB3D
+
+====================================================================
+1) DESCRIZIONE GENERALE DEL PROGRAMMA
+====================================================================
+Questo programma è un motore grafico semplice in C che legge un file di mappa (.cub), valida i contenuti, inizializza una finestra con MiniLibX, carica texture e colori, e poi entra in un ciclo di rendering continuo. Il rendering usa il raycasting per simulare una visuale 3D di una mappa 2D (stile “Wolfenstein 3D”).
+
+Il progetto è la versione BONUS: include porte interattive, animazione delle braccia in sovrimpressione (overlay), minimappa, e gestione opzionale degli FPS.
+
+====================================================================
+2) SCOPO DEL SOFTWARE
+====================================================================
+- Scopo primario: mostrare una scena 3D generata da una mappa 2D, con texture e colori definiti nel file di input.
+- Scopo secondario (bonus): aggiungere interazioni (porte), un minimap, e un overlay grafico animato.
+
+====================================================================
+3) PROBLEMA CHE RISOLVE
+====================================================================
+Risolve il problema di trasformare una descrizione testuale di una mappa 2D in una visualizzazione 3D interattiva. La mappa fornisce:
+- texture delle pareti (Nord/Sud/Ovest/Est)
+- texture di un blocco speciale (B)
+- colori per pavimento e soffitto
+- layout con muri, spazi vuoti, porte e spawn del giocatore
+
+====================================================================
+4) STRUTTURA GENERALE DEL PROGETTO BONUS
+====================================================================
+Cartelle principali coinvolte:
+- bonus/main.c: entry point, ciclo principale MLX.
+- bonus/srcs: parsing file .cub, validazione, utilità, cleanup.
+- bonus/srcs/utils: funzioni di supporto per parsing e validazione.
+- bonus/engine: motore grafico (raycasting, rendering, input, minimap, doors, arms).
+- bonus/includes: header con strutture e prototipi.
+
+====================================================================
+5) STRUTTURE DATI PRINCIPALI (OGGETTI E PROPRIETÀ)
+====================================================================
+
+5.1) t_image
+- img: puntatore MLX dell’immagine
+- addr: indirizzo dei pixel
+- bpp: bits per pixel
+- line_len: bytes per riga
+- endian: endianness
+- width, height: dimensioni
+
+5.2) t_texture
+- path: path della texture
+- img: t_image caricata
+
+5.3) t_color
+- red, green, blue: componenti RGB
+- hex: colore combinato 0xRRGGBB
+
+5.4) t_player
+- pos_x, pos_y: posizione (double) nel mondo
+- spawn_dir: direzione iniziale (N/S/E/W)
+- dir_x, dir_y: vettore direzione
+- plane_x, plane_y: vettore piano camera
+- move_forward/backward/left/right: flag movimento
+- rotate_left/right: flag rotazione
+- columns_distance: array distanze per colonna
+- last_mouse_x: ultimo x mouse (utilizzato per controllo)
+- mouse_enabled: attiva/disattiva controllo mouse
+- m_key_down: gestione toggle mouse
+- ignore_next_mouse: evitare evento mouse immediato
+
+5.5) t_map
+- grid: griglia char**
+- width: larghezza
+- height: altezza
+- player_count: numero player trovati (deve essere 1)
+
+5.6) t_parse
+- file_lines: righe del file .cub
+- line_count: numero righe
+- map_start: indice riga di inizio mappa
+- is_north_set, is_south_set, is_west_set, is_east_set: texture
+- is_box_set: texture B
+- is_floor_set, is_ceiling_set: colori
+
+5.7) t_perf
+- last_ms: tempo ultimo frame
+- fps: fps filtrati
+- fps_raw: fps grezzi
+- last_draw_ms: tempo ultimo render
+
+5.8) t_minimap
+- width, height: dimensioni minimap
+- padding: offset dal bordo
+- scale: pixel per cella
+
+5.9) t_door
+- x, y: posizione porta
+- orientation: non usato
+- is_open: stato
+- frames: array di texture per la porta
+- frame_count: numero frame
+- animation: valore da 0.0 a 1.0
+
+5.10) t_arms
+- frames[4]: texture braccia
+- frame_count: numero frame
+- frame_idx: indice frame corrente
+- anim_dir: direzione animazione
+- anim_active: flag animazione
+- key_down: input
+- anim_time: tempo accumulato
+
+5.11) t_game
+- Contiene tutti i puntatori e stati (mlx, finestra, colori, texture, mappa, player, parse, perf, minimap, doors, arms).
+
+====================================================================
+6) COSTANTI (MACRO)
+====================================================================
+- MOVE_SPEED: 0.08
+- ROT_SPEED: 0.07
+- PLAYER_RADIUS: 0.20
+- MAX_RAY_DISTANCE: 50.0 (non usato direttamente)
+- MOUSE_SENSITIVITY: 0.003
+- MAX_DOORS: 20
+- ARMS_FRAME_TIME: 0.06
+- ARMS_TRANSPARENT: 0xFF00FF (non usato in arms.c)
+
+====================================================================
+7) FLUSSO GLOBALE DI ESECUZIONE
+====================================================================
+
+7.1) Da dove parte l’esecuzione
+- Il programma parte da main() in bonus/main.c.
+
+7.2) Flusso sequenziale principale
+1) main() crea t_game g e lo azzera.
+2) validate_input(ac, av): controlla argomenti, estensione, accesso file.
+3) struct_init(&g): alloca e inizializza strutture base.
+4) parse_file(&g, av[1]): legge il file .cub, parse texture, colori e mappa.
+5) validate_map(&g): controlla caratteri e chiusura mappa.
+6) init_game(&g): inizializza colori default, colonne, minimap, drawing.
+7) init_mlx(&g): inizializza MLX, finestra e immagine schermo.
+8) init_textures(&g): carica texture muri/box, porte, setup doors.
+9) Imposta hook eventi (tastiera, mouse, chiusura).
+10) mlx_loop_hook(..., loop_hook, &g): loop principale.
+11) mlx_loop(): ciclo infinito MLX.
+12) Al termine (uscita), cleanup_game_fields().
+
+7.3) Cicli principali
+- mlx_loop: ciclo di eventi grafici.
+- loop_hook: eseguito ad ogni frame (rendering continuo).
+- Cicli interni: per ogni colonna schermo (raycasting), per ogni pixel (disegno), per ogni riga mappa, ecc.
+
+7.4) Condizioni globali
+- Il gioco gira solo se tutte le validazioni passano.
+- Se si verifica un errore, cleanup e uscita.
+
+====================================================================
+8) DIAGRAMMA LOGICO TESTUALE
+====================================================================
+INIZIO
+ -> main()
+    -> validate_input()
+       -> check_file_extension()
+       -> check_file_access()
+    -> struct_init()
+       -> initialize_map/player/color/texture/parse
+       -> init campi mlx e porte
+    -> parse_file()
+       -> load_file_to_parse()
+          -> read_file_lines()
+             -> count_file_lines()
+             -> open_and_read_lines()
+       -> find_map_start()
+       -> parse_elements()
+          -> parse_texture() / parse_color()
+       -> are_all_elements_set()
+       -> extract_map()
+          -> get_map_height/width
+          -> alloc_map_grid
+          -> fill_map_grid (pad_map_line)
+    -> validate_map()
+       -> validate_and_find_player()
+          -> scan_map_for_player()
+             -> validate_char_and_check_player()
+          -> init_player_position()
+       -> validate_map_borders()
+          -> check_borders_are_walls()
+          -> copy_map()
+          -> flood_fill()
+    -> init_game()
+    -> init_mlx()
+    -> init_textures()
+       -> init_walls()
+       -> allocate_door_frames()
+       -> init_doors()
+    -> setup MLX hooks
+    -> mlx_loop()
+       -> loop_hook()  (ripetuto)
+          -> perf_update()
+          -> update_door_animations()
+          -> update_arms_animation()
+          -> rendering()
+             -> update_player_position()
+             -> update_player_rotation()
+             -> cast_one_ray() per ogni colonna
+                -> DDA
+                -> compute_wall_drawing
+                -> draw_columns
+             -> draw_minimap()
+             -> draw_arms_overlay()
+          -> mlx_put_image_to_window()
+          -> draw_fps_overlay() se attivo
+FINE (clean_up/exit)
+
+====================================================================
+9) TRACCIAMENTO SIMULATO CON ESEMPIO DI INPUT
+====================================================================
+Esempio input: bonus/test_simple.cub
+
+Contenuto:
+- Texture NO/SO/WE/EA
+- F 220,100,0
+- C 225,30,0
+- Mappa 5x6 con N al centro
+
+Simulazione:
+1) main() riceve ac=2, av[1]="bonus/test_simple.cub".
+2) validate_input:
+   - ac==2 OK
+   - estensione ".cub" OK
+   - file apribile OK
+3) struct_init:
+   - alloc map, player, colors, textures, parse
+   - valori iniziali null/zero
+4) parse_file:
+   - load_file_to_parse legge tutte le righe
+   - find_map_start trova prima riga con mappa (riga “111111”)
+   - parse_elements:
+     - NO path letto
+     - SO path letto
+     - WE path letto
+     - EA path letto
+     - F letto -> rgb (220,100,0)
+     - C letto -> rgb (225,30,0)
+   - extract_map:
+     - height: 5 righe
+     - width: 6 colonne
+     - grid costruita con padding
+5) validate_map:
+   - validate_and_find_player: trova N in (2,2)
+   - init_player_position:
+     pos_x=2.5, pos_y=2.5, dir=(0,-1), plane=(0.66,0)
+     cella mappa diventa '0'
+   - validate_map_borders:
+     controlla bordi, flood fill OK
+6) init_game:
+   - columns_distance allocato
+   - minimap impostata
+   - drawing allocato
+7) init_mlx:
+   - finestra e immagine schermo creati
+8) init_textures:
+   - carica texture muri (xpm)
+   - porte: non presenti -> doors array vuoto
+9) loop:
+   - rendering: per ogni colonna (0..width-1) lancia un ray
+   - DDA colpisce muri, disegna pareti, pavimento, soffitto
+   - minimap disegnata
+   - arms overlay disegnato
+10) input:
+   - se l’utente preme 'w', move_forward=1
+   - in update_player_position si muove avanti se non collide
+
+====================================================================
+10) POSSIBILI ERRORI RUNTIME
+====================================================================
+- File .cub inesistente o non leggibile.
+- Estensione errata.
+- Memoria insufficiente in allocazioni (texture, mappe, frame, screen).
+- Texture non trovate o non caricabili.
+- Mappa non valida: caratteri illegali, player mancante/multiplo, mappa aperta.
+- MLX init o window creation fallite.
+- Accessi fuori bounds se mappa o schermata non valide.
+- Porte > MAX_DOORS causa clean_up (exit).
+
+====================================================================
+11) STATO DELLA MEMORIA LOGICA DELLE VARIABILI (FASI)
+====================================================================
+
+11.1) Subito dopo struct_init
+- g->map: allocata, grid=NULL, width=0, height=0
+- g->player: pos=0, dir=0, flag movimenti=0, columns_distance=NULL
+- g->floor/wall/ceiling: rgb = -1
+- g->tex_*: path=NULL, img=NULL
+- g->parse: file_lines=NULL, line_count=0, map_start=-1, flag elementi=false
+- g->mlx_init/win/screen: NULL
+- g->doors: NULL, door_count=0
+
+11.2) Dopo parse_file
+- parse.file_lines contiene tutto il file
+- parse.map_start impostato
+- tex_* path valorizzati
+- floor/ceiling RGB + hex valorizzati
+- map.grid allocata con char**
+- map.width/height impostati
+
+11.3) Dopo validate_map
+- player.pos_x/pos_y: al centro della cella spawn
+- player.dir e plane impostati
+- map.grid cella spawn diventata '0'
+
+11.4) Dopo init_game
+- player.columns_distance allocato (size = width)
+- minimap impostata
+- drawing allocato
+
+11.5) Dopo init_mlx
+- mlx_init e win validi
+- screen creato
+- screen->addr impostato
+- g->pix = (t_color*)screen->addr
+
+11.6) Durante loop
+- move flags cambiano in base agli input
+- pos_x/pos_y cambiano a ogni frame
+- per ogni colonna, g->drawing aggiornata
+- g->perf aggiornato
+
+====================================================================
+12) ANALISI FUNZIONE PER FUNZIONE
+====================================================================
+
+--------------------------------------------------------------------
+A) bonus/main.c
+--------------------------------------------------------------------
+
+FUNZIONE: main
+Parametri: int ac, char **av
+Ritorno: int
+Passi:
+1) Dichiarazione t_game g.
+2) g = (t_game){0}: azzera la struct.
+3) validate_input(ac,av): se fallisce return 1.
+4) struct_init(&g): se fallisce cleanup e return 1.
+5) parse_file(&g,av[1]): se fallisce cleanup e return 1.
+6) validate_map(&g): se fallisce cleanup e return 1.
+7) init_game(&g).
+8) init_mlx(&g).
+9) init_textures(&g).
+10) mlx_hook per eventi tastiera/mouse/close.
+11) mlx_loop_hook con loop_hook.
+12) mlx_loop (blocco finché non si esce).
+13) cleanup_game_fields(&g).
+14) return 0.
+Variabili:
+- g: inizializzato vuoto, poi riempito in varie fasi. Non viene liberato con free perché è su stack.
+Chiamate:
+- validate_input, struct_init, parse_file, validate_map, init_game, init_mlx, init_textures, key_press, key_release, mouse_move, clean_up, loop_hook, cleanup_game_fields.
+
+--------------------------------------------------------------------
+B) bonus/srcs/validate_input.c
+--------------------------------------------------------------------
+
+FUNZIONE: check_file_extension
+Parametri: char *filename
+Ritorno: int (0 OK, -1 errore)
+Passi:
+1) Se filename NULL -> -1.
+2) Calcola len = ft_strlen(filename).
+3) Se len < 5 -> errore.
+4) extention = filename + (len - 4).
+5) Confronta con ".cub".
+6) Se diverso -> errore.
+7) Return 0.
+Variabili:
+- len inizializzato con lunghezza; extention punta alla fine della stringa.
+
+FUNZIONE: check_file_access
+Parametri: char *filename
+Ritorno: int
+Passi:
+1) Se filename NULL -> -1.
+2) open(filename, O_RDONLY).
+3) Se fd < 0 -> errore e return -1.
+4) close(fd).
+5) return 0.
+Variabili:
+- fd usato per verificare accesso.
+
+FUNZIONE: validate_input
+Parametri: int ac, char **av
+Ritorno: int
+Passi:
+1) Se ac != 2 -> errore e return -1.
+2) Se check_file_extension(av[1]) == -1 -> return -1.
+3) Se check_file_access(av[1]) == -1 -> return -1.
+4) Return 0.
+Variabili:
+- ac/av usati solo per controlli.
+
+--------------------------------------------------------------------
+C) bonus/srcs/init_structs.c
+--------------------------------------------------------------------
+
+FUNZIONE: initialize_door_system (static)
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) doors=NULL, door_frames=NULL, door_count=0.
+
+FUNZIONE: initialize_mlx_fields (static)
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) mlx_init=NULL, win=NULL, screen=NULL.
+2) width=1920, height=1080.
+3) perf.* azzerati.
+4) show_fps=false.
+
+FUNZIONE: struct_init
+Parametri: t_game *g
+Ritorno: bool (0 OK, 1 errore)
+Passi:
+1) Alloca map/player/colors/textures/parse con funzioni initialize_*.
+2) Se una allocazione fallisce -> return 1.
+3) initialize_door_system(g).
+4) initialize_mlx_fields(g).
+5) return 0.
+Variabili:
+- g->map, g->player, g->floor, g->wall, g->ceiling, g->tex_* , g->parse.
+
+--------------------------------------------------------------------
+D) bonus/srcs/read_file.c
+--------------------------------------------------------------------
+
+FUNZIONE: count_file_lines
+Parametri: char *filename
+Ritorno: int (numero righe o -1)
+Passi:
+1) open file.
+2) Se open fallisce -> errore.
+3) line_count=0.
+4) Legge linee con get_next_line fino a NULL.
+5) Incrementa line_count per ogni riga.
+6) Chiude file.
+7) Return line_count.
+Variabili:
+- fd, line, line_count.
+
+FUNZIONE: open_and_read_lines
+Parametri: char *filename, char **total_lines
+Ritorno: int (0 OK, -1)
+Passi:
+1) open file.
+2) Se open fallisce -> errore, free(total_lines), return -1.
+3) i=0; line = get_next_line(fd).
+4) Per ogni riga:
+   - se contiene '\n', lo sostituisce con '\0'.
+   - total_lines[i] = line.
+   - i++.
+5) total_lines[i]=NULL.
+6) close(fd).
+7) return 0.
+Variabili:
+- i, line, fd.
+
+FUNZIONE: read_file_lines
+Parametri: char *filename, int *line_count
+Ritorno: char **
+Passi:
+1) *line_count = count_file_lines(filename).
+2) Se <=0 -> errore e NULL.
+3) Alloca total_lines (line_count+1).
+4) open_and_read_lines; se fallisce -> NULL.
+5) return total_lines.
+
+FUNZIONE: load_file_to_parse
+Parametri: t_game *game, char *filename
+Ritorno: int
+Passi:
+1) Se game o game->parse NULL -> -1.
+2) game->parse->file_lines = read_file_lines(...)
+3) Se NULL -> -1.
+4) Return 0.
+
+--------------------------------------------------------------------
+E) bonus/srcs/identify_elements.c
+--------------------------------------------------------------------
+
+FUNZIONE: handle_map_found (static)
+Parametri: t_game *game, int line_index
+Ritorno: int
+Passi:
+1) game->parse->map_start = line_index.
+2) Stampa info.
+3) return 0.
+
+FUNZIONE: handle_invalid_line (static)
+Parametri: char *line, int line_num, int elem_found
+Ritorno: int
+Passi:
+1) Stampa errore con numero riga e contenuto.
+2) Return -1.
+
+FUNZIONE: handle_end_errors (static)
+Parametri: int elem_found
+Ritorno: int
+Passi:
+1) Se elem_found<6 -> errore missing elements.
+2) Altrimenti errore map not found.
+3) Return -1.
+
+FUNZIONE: check_line_type (static)
+Parametri: t_game *game, int i, int elem_found
+Ritorno: int
+Passi:
+1) Se riga vuota -> 0.
+2) Se elem_found==6 -> 1 (mappa trovata).
+3) Se riga inizia con "B " -> 0.
+4) Se is_valid_identifier -> 2.
+5) Altrimenti -1.
+
+FUNZIONE: find_map_start
+Parametri: t_game *game
+Ritorno: int
+Passi:
+1) i=0, elem_found=0.
+2) Loop su linee:
+   - result = check_line_type.
+   - se result==1 -> handle_map_found
+   - se result==2 -> elem_found++
+   - se result==-1 -> handle_invalid_line
+3) Se finisce loop -> handle_end_errors.
+
+--------------------------------------------------------------------
+F) bonus/srcs/parse_file.c
+--------------------------------------------------------------------
+
+FUNZIONE: parse_element (static)
+Parametri: t_game *game, char *line
+Ritorno: int
+Passi:
+1) i = skip_spaces(line,0).
+2) Se riga inizia con NO/SO/WE/EA/B -> parse_texture.
+3) Se inizia con F/C -> parse_color.
+4) Se line[i] è valido e non '1' -> errore.
+5) Return 0 se ok.
+
+FUNZIONE: parse_elements (static)
+Parametri: t_game *game
+Ritorno: int
+Passi:
+1) i=0.
+2) Loop fino a map_start:
+   - se riga vuota -> continue
+   - parse_element
+   - se parse_element < 0 -> -1
+3) return 0.
+
+FUNZIONE: are_all_elements_set (static)
+Parametri: t_game *game
+Ritorno: int
+Passi:
+1) Controlla ogni flag texture/colore.
+2) Se manca -> errore.
+3) return 0.
+
+FUNZIONE: parse_file
+Parametri: t_game *game, char *filename
+Ritorno: int
+Passi:
+1) load_file_to_parse.
+2) find_map_start.
+3) parse_elements.
+4) are_all_elements_set.
+5) extract_map.
+6) Stampa log di successo.
+7) return 0.
+
+--------------------------------------------------------------------
+G) bonus/srcs/parse_texture.c e utils
+--------------------------------------------------------------------
+
+FUNZIONE: get_texture_path
+Parametri: char *line, int identifier_len
+Ritorno: char * (dup della path)
+Passi:
+1) i = skip_spaces(line,0).
+2) i += identifier_len.
+3) i = skip_spaces(line, i).
+4) path = ft_strdup(&line[i]).
+5) return path.
+
+FUNZIONE: validate_texture_file
+Parametri: char *path
+Ritorno: int
+Passi:
+1) open(path).
+2) Se fd < 0 -> errore.
+3) close(fd).
+4) return 0.
+
+FUNZIONE: parse_texture
+Parametri: t_game *game, char *line
+Ritorno: int
+Passi:
+1) i=skip_spaces.
+2) Se "NO" -> parse_north_texture.
+3) Se "SO" -> parse_south_texture.
+4) Se "WE" -> parse_west_texture.
+5) Se "EA" -> parse_east_texture.
+6) Se "B " -> parse_box_texture.
+7) Altrimenti errore.
+
+FUNZIONE: parse_north_texture
+Parametri: t_game *game, char *line
+Ritorno: int
+Passi:
+1) Se is_north_set true -> errore.
+2) path = get_texture_path(line,2).
+3) validate_texture_file(path).
+4) is_north_set = true.
+5) return 0.
+
+FUNZIONE: parse_south_texture
+Parametri: t_game *game, char *line
+Ritorno: int
+Simile a parse_north_texture per SO.
+
+FUNZIONE: parse_west_texture
+Parametri: t_game *game, char *line
+Ritorno: int
+Simile a parse_north_texture per WE.
+
+FUNZIONE: parse_east_texture
+Parametri: t_game *game, char *line
+Ritorno: int
+Simile a parse_north_texture per EA.
+
+FUNZIONE: parse_box_texture
+Parametri: t_game *game, char *line
+Ritorno: int
+Simile, usa identifier_len=1.
+
+--------------------------------------------------------------------
+H) bonus/srcs/parse_color.c e utils
+--------------------------------------------------------------------
+
+FUNZIONE: extract_rgb_str
+Parametri: char *line, int identifier_len
+Ritorno: char *
+Passi:
+1) i=identifier_len.
+2) i = skip_spaces(line,i).
+3) Se line[i] fine stringa -> NULL.
+4) rgb_str = ft_strdup(&line[i]).
+5) trimmed = ft_strtrim(rgb_str, " \t\n\r").
+6) free(rgb_str).
+7) return trimmed.
+
+FUNZIONE: parse_floor_color
+Parametri: t_game *game, char *line
+Ritorno: int
+Passi:
+1) Se is_floor_set -> errore.
+2) rgb_str = extract_rgb_str(line,1).
+3) parse_rgb_vals(rgb_str, rgb_val).
+4) Set floor->red/green/blue/hex.
+5) is_floor_set=true.
+
+FUNZIONE: parse_ceiling_color
+Parametri: t_game *game, char *line
+Ritorno: int
+Simile a parse_floor_color.
+
+FUNZIONE: parse_color
+Parametri: t_game *game, char *line
+Ritorno: int
+Passi:
+1) i=skip_spaces.
+2) Se "F " -> parse_floor_color.
+3) Se "C " -> parse_ceiling_color.
+4) Altrimenti errore.
+
+FUNZIONE: validate_rgb_val
+Parametri: int value
+Ritorno: int
+Passi:
+1) Se value < 0 o > 255 -> errore.
+2) return 0.
+
+FUNZIONE: validate_and_split_rgb
+Parametri: char *rgb_str
+Ritorno: char **
+Passi:
+1) Se contiene spazi o tab -> errore.
+2) Se count_commas != 2 -> errore.
+3) split con ','.
+4) Se non 3 valori -> errore.
+5) return array.
+
+FUNZIONE: process_single_rgb_val
+Parametri: char *rgb_str, int *value
+Ritorno: int
+Passi:
+1) trimmed = ft_strtrim.
+2) Se !is_valid_nbr(trimmed) -> errore.
+3) *value = ft_atoi(trimmed).
+4) validate_rgb_val(*value).
+
+FUNZIONE: parse_rgb_vals
+Parametri: char *rgb_str, int *values
+Ritorno: int
+Passi:
+1) rgb_strs = validate_and_split_rgb.
+2) Per i=0..2 -> process_single_rgb_val.
+3) free_array(rgb_strs).
+
+FUNZIONE: rgb_to_hex
+Parametri: int r,g,b
+Ritorno: int
+Passi:
+1) return (r<<16)|(g<<8)|b.
+
+--------------------------------------------------------------------
+I) bonus/srcs/extract_map.c e utils
+--------------------------------------------------------------------
+
+FUNZIONE: check_content_after_map (static)
+Parametri: t_game *game, int start_line, int *content_line, int *is_map_content
+Ritorno: int
+Passi:
+1) Scorre righe da start_line.
+2) Se trova riga non vuota:
+   - content_line = i+1
+   - is_map_content = is_map_line(riga)
+   - return 1
+3) return 0.
+
+FUNZIONE: handle_empty_line (static)
+Parametri: t_game *game, char **grid, int row, int line_idx
+Ritorno: int
+Passi:
+1) Se row>0, controlla se c’è contenuto dopo.
+2) Se contenuto mappa dopo una linea vuota -> errore.
+3) Se contenuto non-mappa dopo -> errore.
+4) Se errore -> free_map_rows e -1.
+
+FUNZIONE: process_map_line (static)
+Parametri: char *line, char **grid, int row, int width
+Ritorno: int
+Passi:
+1) grid[row] = pad_map_line(line,width).
+2) Se NULL -> errore e free_map_rows.
+
+FUNZIONE: fill_map_grid (static)
+Parametri: t_game *game, char **map_grid, int map_width
+Ritorno: int
+Passi:
+1) i = map_start, map_row=0.
+2) Loop righe:
+   - se linea vuota -> handle_empty_line.
+   - altrimenti process_map_line.
+   - map_row++.
+3) return 0.
+
+FUNZIONE: extract_map
+Parametri: t_game *game
+Ritorno: int
+Passi:
+1) map_height = get_map_height.
+2) map_width = get_map_width.
+3) Se 0 -> errore.
+4) map_grid = alloc_map_grid(height).
+5) fill_map_grid.
+6) game->map->grid = map_grid.
+7) set width/height.
+
+FUNZIONE: get_map_height
+Parametri: t_game *game
+Ritorno: int
+Passi:
+1) Conta righe non vuote da map_start alla fine.
+
+FUNZIONE: get_map_width
+Parametri: t_game *game
+Ritorno: int
+Passi:
+1) Trova la riga più lunga.
+
+FUNZIONE: pad_map_line
+Parametri: char *line, int width
+Ritorno: char *
+Passi:
+1) Alloca stringa width+1.
+2) Copia la riga.
+3) Riempie spazi fino a width.
+
+FUNZIONE: alloc_map_grid
+Parametri: int height
+Ritorno: char **
+Passi:
+1) calloc height+1.
+
+FUNZIONE: free_map_rows
+Parametri: char **map_grid, int row_count
+Ritorno: void
+Passi:
+1) Libera righe 0..row_count-1.
+2) free(map_grid).
+
+--------------------------------------------------------------------
+J) bonus/srcs/validate_map.c e utils
+--------------------------------------------------------------------
+
+FUNZIONE: validate_map
+Parametri: t_game *game
+Ritorno: int
+Passi:
+1) validate_and_find_player.
+2) validate_map_borders.
+3) return 0.
+
+FUNZIONE: validate_and_find_player
+Parametri: t_game *game
+Ritorno: int
+Passi:
+1) scan_map_for_player -> trova player e valida caratteri.
+2) Se player_count != 1 -> errore.
+3) init_player_position con coordinate.
+
+FUNZIONE: scan_map_for_player (static)
+Parametri: t_game *game, int *px, int *py, char *dir
+Ritorno: int
+Passi:
+1) Loop y e x su mappa.
+2) validate_char_and_check_player.
+3) Se player char -> salva px,py,dir.
+
+FUNZIONE: validate_char_and_check_player (static)
+Parametri: t_game *game, int x, int y
+Ritorno: int
+Passi:
+1) Verifica bounds.
+2) is_valid_map_char.
+3) Se 'B' e box texture non settata -> errore.
+4) Se player char: se player_count>0 -> errore, else incrementa count.
+
+FUNZIONE: init_player_position
+Parametri: t_game *game, int x, int y, char dir
+Ritorno: void
+Passi:
+1) Verifica bounds.
+2) pos_x = x+0.5, pos_y = y+0.5.
+3) set_player_direction(player, dir).
+4) map->grid[y][x] = '0'.
+
+FUNZIONE: validate_map_borders
+Parametri: t_game *game
+Ritorno: int
+Passi:
+1) check_borders_are_walls.
+2) copy_map.
+3) flood_fill dalla posizione player.
+4) free_array(copy).
+
+FUNZIONE: check_borders_are_walls
+Parametri: t_game *game
+Ritorno: int
+Passi:
+1) check_top_bottom_borders.
+2) check_left_right_borders.
+
+FUNZIONE: flood_fill (static)
+Parametri: t_game *game, char **map_copy, int x, int y
+Ritorno: int
+Passi:
+1) Se posizione non valida -> errore.
+2) Se tile è '1' o 'V' o 'B' -> return 0.
+3) Se tile è spazio -> errore.
+4) Se tile != '0' -> return 0.
+5) Segna 'V'.
+6) Chiamate ricorsive su 4 direzioni.
+
+FUNZIONE: flood_fill_recursive (static)
+Parametri: t_game *game, char **map_copy, int x, int y
+Ritorno: int
+Passi:
+1) Chiama flood_fill su destra, sinistra, giù, su.
+
+FUNZIONE: copy_map
+Parametri: t_game *game
+Ritorno: char **
+Passi:
+1) Alloca array righe.
+2) Duplica ogni riga.
+3) In caso di errore libera.
+
+FUNZIONE: is_valid_position
+Parametri: t_game *game, int x, int y
+Ritorno: bool
+Passi:
+1) Controlla 0 <= x < width, 0 <= y < height.
+
+FUNZIONE: check_top_bottom_borders
+Parametri: t_game *game
+Ritorno: int
+Passi:
+1) Per y=0 e y=height-1, controlla ogni x.
+2) Solo '1', ' ', 'B' sono validi.
+
+FUNZIONE: check_left_right_borders
+Parametri: t_game *game
+Ritorno: int
+Passi:
+1) Per ogni y, controlla x=0 e x=width-1.
+
+FUNZIONE: check_column (static)
+Parametri: t_game *game, int x, int y
+Ritorno: int
+Passi:
+1) Se x nel range, la cella deve essere '1',' ','B'.
+
+FUNZIONE: is_line_empty
+Parametri: char *line
+Ritorno: int
+Passi:
+1) Se NULL -> 1.
+2) Se tutti spazi/tab/newline -> 1.
+3) Altrimenti 0.
+
+FUNZIONE: is_map_line
+Parametri: char *line
+Ritorno: int
+Passi:
+1) Ogni char deve essere tra 0/1/N/S/E/W/D/B/space/tab/newline.
+
+FUNZIONE: is_valid_map_char
+Parametri: char c
+Ritorno: bool
+Passi:
+1) Ritorna true se in set valido.
+
+FUNZIONE: is_player_char
+Parametri: char c
+Ritorno: bool
+Passi:
+1) true se N/S/E/W.
+
+FUNZIONE: set_direction_vector
+Parametri: t_player *player, char dir
+Ritorno: void
+Passi:
+1) Imposta dir_x/dir_y in base a dir.
+
+FUNZIONE: set_camera_plane
+Parametri: t_player *player, char dir
+Ritorno: void
+Passi:
+1) Imposta plane_x/plane_y in base a dir.
+
+FUNZIONE: set_player_direction
+Parametri: t_player *player, char dir
+Ritorno: void
+Passi:
+1) player->spawn_dir=dir
+2) set_direction_vector
+3) set_camera_plane
+
+--------------------------------------------------------------------
+K) bonus/srcs/parse_utils.c
+--------------------------------------------------------------------
+
+FUNZIONE: skip_spaces
+Parametri: char *str, int index
+Ritorno: int
+Passi:
+1) Avanza index finché trova spazio o tab.
+
+FUNZIONE: is_valid_identifier
+Parametri: char *line
+Ritorno: int
+Passi:
+1) Salta spazi.
+2) Controlla prefissi NO/SO/WE/EA/B/F/C.
+
+FUNZIONE: is_valid_nbr
+Parametri: char *str
+Ritorno: int
+Passi:
+1) Verifica che tutti i char siano digit.
+
+FUNZIONE: count_commas
+Parametri: char *str
+Ritorno: int
+Passi:
+1) Conta numero di ',' nella stringa.
+
+--------------------------------------------------------------------
+L) bonus/srcs/cleanup.c e cleanup_utils.c
+--------------------------------------------------------------------
+
+FUNZIONE: destroy_doors
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) Se door_frames -> free_door_frames.
+2) Se doors -> free.
+
+FUNZIONE: cleanup_parsing_fields
+Parametri: t_game *game
+Ritorno: void
+Passi:
+1) free_texture per nord/sud/est/ovest/box.
+2) free_arms_frames.
+3) destroy_doors.
+4) free floor/wall/ceiling.
+5) free_map.
+6) free player (+ columns_distance).
+7) free_parse.
+
+FUNZIONE: cleanup_mlx_resources
+Parametri: t_game *game
+Ritorno: void
+Passi:
+1) free_screen.
+2) mlx_destroy_window.
+3) mlx_destroy_display.
+4) free(mlx_init).
+5) free(drawing).
+
+FUNZIONE: cleanup_game_fields
+Parametri: t_game *game
+Ritorno: void
+Passi:
+1) cleanup_parsing_fields.
+2) cleanup_mlx_resources.
+
+FUNZIONE: clean_up
+Parametri: t_game *g
+Ritorno: int (ma termina il programma)
+Passi:
+1) Se g NULL -> exit(0).
+2) cleanup_game_fields.
+3) exit(0).
+
+FUNZIONE: free_array
+Parametri: char **arr
+Ritorno: void
+Passi:
+1) Loop e free su ogni riga.
+2) free(arr).
+
+FUNZIONE: free_texture
+Parametri: t_game *game, t_texture *texture
+Ritorno: void
+Passi:
+1) free path.
+2) Se img->img e mlx_init -> mlx_destroy_image.
+3) free(img).
+4) free(texture).
+
+FUNZIONE: free_map
+Parametri: t_map *map
+Ritorno: void
+Passi:
+1) free_array(grid).
+2) free(map).
+
+FUNZIONE: free_parse
+Parametri: t_parse *parse
+Ritorno: void
+Passi:
+1) free_array(file_lines).
+2) free(parse).
+
+FUNZIONE: free_screen
+Parametri: t_game *game
+Ritorno: void
+Passi:
+1) mlx_destroy_image se possibile.
+2) free(screen).
+
+--------------------------------------------------------------------
+M) bonus/engine/init.c
+--------------------------------------------------------------------
+
+FUNZIONE: init_minimap (static)
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) width=150, height=150, padding=10, scale=10.
+
+FUNZIONE: init_game
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) init_color(g) (imposta colori default).
+2) Alloca columns_distance = double[width].
+3) Se fallisce -> error e clean_up.
+4) Inizializza array a 0.
+5) init_minimap.
+6) g->drawing = calloc(1, sizeof(t_drawing)).
+7) Se fallisce -> error e clean_up.
+
+FUNZIONE: init_mlx
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) g->mlx_init = mlx_init().
+2) Se NULL -> errore e exit.
+3) g->win = mlx_new_window(...).
+4) mlx_mouse_hide.
+5) g->screen = malloc(t_image).
+6) g->screen->img = mlx_new_image.
+7) g->screen->addr = mlx_get_data_addr.
+8) g->pix = (t_color*)g->screen->addr.
+
+--------------------------------------------------------------------
+N) bonus/engine/main_rendering.c
+--------------------------------------------------------------------
+
+FUNZIONE: loop_hook
+Parametri: t_game *g
+Ritorno: int
+Passi:
+1) perf_update(&g->perf).
+2) delta_time = (last_ms - last_draw_ms)/1000.
+3) last_draw_ms = last_ms.
+4) update_door_animations(delta_time).
+5) update_arms_animation(delta_time).
+6) rendering(g).
+7) mlx_put_image_to_window.
+8) Se show_fps -> draw_fps_overlay.
+9) return 0.
+
+FUNZIONE: rendering
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) ft_memset schermo a 0.
+2) update_player_position.
+3) update_player_rotation.
+4) Loop x=0..width-1:
+   - cast_one_ray(g,x).
+5) draw_minimap(g).
+6) draw_arms_overlay(g).
+
+--------------------------------------------------------------------
+O) bonus/engine/ray_casting.c e utils + DDA
+--------------------------------------------------------------------
+
+FUNZIONE: init_ray_direction
+Parametri: t_ray *ray, t_game *g, int x
+Ritorno: void
+Passi:
+1) camera_x = 2*x/width - 1.
+2) ray_dir_x = dir_x + plane_x*camera_x.
+3) ray_dir_y = dir_y + plane_y*camera_x.
+
+FUNZIONE: init_ray_map
+Parametri: t_ray *ray, t_game *g
+Ritorno: void
+Passi:
+1) map_x = (int)player->pos_x.
+2) map_y = (int)player->pos_y.
+
+FUNZIONE: init_delta_distance
+Parametri: t_ray *ray
+Ritorno: void
+Passi:
+1) delta_dist_x = fabs(1/ray_dir_x) o 1e30 se 0.
+2) delta_dist_y = fabs(1/ray_dir_y) o 1e30 se 0.
+
+FUNZIONE: init_step_side_distance
+Parametri: t_ray *ray, t_game *g
+Ritorno: void
+Passi:
+1) Se ray_dir_x < 0 -> step_x=-1, side_dist_x calcolata.
+2) Altrimenti step_x=1.
+3) Simile per y.
+
+FUNZIONE: step_ray
+Parametri: t_ray *ray
+Ritorno: void
+Passi:
+1) Confronta side_dist_x e side_dist_y.
+2) Aggiorna il minore, sposta map_x/map_y.
+3) side = 0 (verticale) o 1 (orizzontale).
+
+FUNZIONE: check_collision
+Parametri: t_ray *ray, t_game *g
+Ritorno: void
+Passi:
+1) Se fuori bounds -> return.
+2) Se tile '1' o 'B' -> hit=1.
+3) Se tile 'D' -> cerca door, se non aperta hit=1.
+
+FUNZIONE: perform_dda
+Parametri: t_ray *ray, t_game *g
+Ritorno: void
+Passi:
+1) hit=0, steps=0.
+2) Loop finché !hit e steps<100:
+   - step_ray
+   - check_collision
+
+FUNZIONE: compute_wall_distance
+Parametri: t_ray *ray, t_game *g
+Ritorno: double
+Passi:
+1) Se side==0 -> formula con ray_dir_x.
+2) Se side==1 -> formula con ray_dir_y.
+
+FUNZIONE: compute_wall_drawing
+Parametri: t_drawing *draw, t_ray *ray, t_game *g
+Ritorno: void
+Passi:
+1) Se !hit -> imposta line_height=0.
+2) Altrimenti wall_distance=compute_wall_distance.
+3) line_height = height / wall_distance.
+4) draw_start/draw_end calcolati e clampati.
+
+FUNZIONE: cast_one_ray
+Parametri: t_game *g, int x
+Ritorno: void
+Passi:
+1) Inizializza ray.
+2) Esegue DDA.
+3) compute_wall_drawing.
+4) draw_columns.
+
+--------------------------------------------------------------------
+P) bonus/engine/draw.c e texture_draw.c
+--------------------------------------------------------------------
+
+FUNZIONE: draw_ceiling_part
+Parametri: t_game *g, int x, int draw_start
+Ritorno: void
+Passi:
+1) y=0..draw_start-1.
+2) factor calcolato per shading.
+3) put_pixel con shade_color(ceiling).
+
+FUNZIONE: draw_floor_part
+Parametri: t_game *g, int x, int draw_end
+Ritorno: void
+Passi:
+1) y=draw_end+1..height-1.
+2) factor calcolato.
+3) put_pixel con shade_color(floor).
+
+FUNZIONE: draw_columns
+Parametri: t_game *g, int x, t_drawing *draw
+Ritorno: void
+Passi:
+1) factor = 1/(1+0.05*columns_distance[x]).
+2) Se side==1 -> factor *=0.7.
+3) draw_ceiling_part
+4) draw_wall_part
+5) draw_floor_part
+
+FUNZIONE: draw_wall_part
+Parametri: t_game *g, int x, t_drawing *draw, double factor
+Ritorno: void
+Passi:
+1) tex_face = select_tex_face.
+2) Se tex_face o img NULL -> return.
+3) draw_textured_column.
+
+FUNZIONE: draw_textured_column (static)
+Parametri: t_game *g, int x, t_texture *tex_face, double factor
+Ritorno: void
+Passi:
+1) tx_x = get_tex_x(...)
+2) step = img->height / line_height
+3) tex_pos iniziale
+4) Loop y=draw_start..draw_end:
+   - get_texture_pixel
+   - shade_color
+   - put_pixel
+
+FUNZIONE: allocate_and_load_xpm
+Parametri: t_game *g, t_texture *tex, const char *path
+Ritorno: int (1 ok, 0 errore)
+Passi:
+1) Alloc t_image.
+2) mlx_xpm_file_to_image.
+3) Se fallisce, free e return 0.
+
+--------------------------------------------------------------------
+Q) bonus/engine/texture_select.c
+--------------------------------------------------------------------
+
+FUNZIONE: get_side_type (static)
+Parametri: int side
+Ritorno: char
+Passi:
+1) side==0 -> 'V' else 'H'.
+
+FUNZIONE: get_match_door (static)
+Parametri: t_game *g, int x, int y, char side_type
+Ritorno: t_texture *
+Passi:
+1) Cerca porta in g->doors.
+2) Se trovata -> get_door_frame_texture.
+
+FUNZIONE: select_door_texture (static)
+Parametri: t_drawing *draw, t_game *g
+Ritorno: t_texture *
+Passi:
+1) door_x/door_y = ray->map_x/y.
+2) Se fuori bounds -> NULL.
+3) Se cella != 'D' -> NULL.
+4) return get_match_door.
+
+FUNZIONE: select_tex_face
+Parametri: t_drawing *draw, t_game *g
+Ritorno: t_texture *
+Passi:
+1) door_tex = select_door_texture; se esiste -> return.
+2) Se cella 'B' -> return tex_box.
+3) Se side==0 -> east/west in base a ray_dir_x.
+4) Se side==1 -> south/north in base a ray_dir_y.
+
+--------------------------------------------------------------------
+R) bonus/engine/colours_management.c
+--------------------------------------------------------------------
+
+FUNZIONE: shade_color
+Parametri: t_color col, double factor
+Ritorno: t_color
+Passi:
+1) Moltiplica RGB per factor.
+2) Clamp a 255.
+3) Recalcola hex.
+
+FUNZIONE: get_tex_x
+Parametri: t_ray *ray, t_game *g, t_image *texture, double wall_distance
+Ritorno: int
+Passi:
+1) Calcola wall_x.
+2) wall_x = wall_x - int(wall_x).
+3) tex_x = wall_x * texture->width.
+4) Inverte se necessario (dipende dal lato).
+
+FUNZIONE: get_tex_y
+Parametri: int y, t_drawing *draw, t_image *tex
+Ritorno: int
+Passi:
+1) step = tex->height / (draw_end - draw_start + 1).
+2) texture_y = (y - draw_start) * step.
+
+FUNZIONE: get_texture_pixel
+Parametri: t_image *tex, int tex_x, int tex_y, t_game *g
+Ritorno: t_color
+Passi:
+1) Se tex non valido -> return *g->wall.
+2) Clamp tex_x/tex_y.
+3) Calcola indirizzo.
+4) Estrae pixel_value.
+5) Converte in t_color.
+
+FUNZIONE: init_color
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) Imposta colori default (floor/ceiling/wall).
+
+--------------------------------------------------------------------
+S) bonus/engine/utils.c
+--------------------------------------------------------------------
+
+FUNZIONE: put_pixel
+Parametri: t_image *img, int x, int y, t_color color
+Ritorno: void
+Passi:
+1) Se img NULL o fuori bounds -> return.
+2) Calcola dst.
+3) Scrive color.hex.
+
+FUNZIONE: try_toggle_door (static)
+Parametri: t_game *g, int i
+Ritorno: void
+Passi:
+1) door_x/door_y = doors[i].
+2) Se player vicino (dist < 2.0 in x/y):
+   - Se porta aperta e player sulla stessa cella -> return.
+   - Altrimenti toggle is_open.
+
+FUNZIONE: check_and_toggle_door
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) Se doors NULL o door_count==0 -> return.
+2) Loop su porte -> try_toggle_door.
+
+FUNZIONE: allocate_door_frames
+Parametri: void
+Ritorno: t_texture **
+Passi:
+1) Alloc array di 1 texture.
+2) Per ogni frame: alloc t_texture e set img=NULL.
+
+FUNZIONE: update_player_position
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) Se move_forward -> move_forward.
+2) Se move_backward -> move_backward.
+3) Se move_left -> lateral_move(-1).
+4) Se move_right -> lateral_move(1).
+
+--------------------------------------------------------------------
+T) bonus/engine/move_management.c
+--------------------------------------------------------------------
+
+FUNZIONE: try_move_x (static)
+Parametri: t_game *g, double step
+Ritorno: void
+Passi:
+1) Se step==0 -> return.
+2) off = PLAYER_RADIUS o -PLAYER_RADIUS.
+3) tx = pos_x + step.
+4) ix = (int)(tx + off), iy=(int)pos_y.
+5) Se dentro mappa -> tile = grid[iy][ix].
+6) Se tile '0' o (tile 'D' aperta) -> pos_x = tx.
+
+FUNZIONE: try_move_y (static)
+Parametri: t_game *g, double step
+Ritorno: void
+Passi:
+1) Simile a try_move_x ma per y.
+
+FUNZIONE: move_forward
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) try_move_x(dir_x * MOVE_SPEED)
+2) try_move_y(dir_y * MOVE_SPEED)
+
+FUNZIONE: move_backward
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) try_move_x(-dir_x * MOVE_SPEED)
+2) try_move_y(-dir_y * MOVE_SPEED)
+
+FUNZIONE: lateral_move
+Parametri: t_game *g, int direction
+Ritorno: void
+Passi:
+1) d = direction.
+2) try_move_x(plane_x * MOVE_SPEED * d)
+3) try_move_y(plane_y * MOVE_SPEED * d)
+
+--------------------------------------------------------------------
+U) bonus/engine/rotation.c
+--------------------------------------------------------------------
+
+FUNZIONE: update_player_rotation
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) Se rotate_left -> apply_rotation(ROT_SPEED).
+2) Se rotate_right -> apply_rotation(-ROT_SPEED).
+
+FUNZIONE: apply_rotation
+Parametri: t_game *g, double angle
+Ritorno: void
+Passi:
+1) Salva old_dir_x e old_plane_x.
+2) Aggiorna dir_x/dir_y con rotazione.
+3) Aggiorna plane_x/plane_y con rotazione.
+
+--------------------------------------------------------------------
+V) bonus/engine/key_management.c e key_utils.c
+--------------------------------------------------------------------
+
+FUNZIONE: handle_movement_keys
+Parametri: int keycode, t_game *g
+Ritorno: void
+Passi:
+1) Se 'w' -> move_forward=1.
+2) Se 's' -> move_backward=1.
+3) Se 'a' -> move_left=1.
+4) Se 'd' -> move_right=1.
+
+FUNZIONE: handle_rotation_keys
+Parametri: int keycode, t_game *g
+Ritorno: void
+Passi:
+1) Se 'e' o right arrow -> rotate_left=1.
+2) Se 'q' o left arrow -> rotate_right=1.
+
+FUNZIONE: key_press
+Parametri: int keycode, t_game *g
+Ritorno: int
+Passi:
+1) Se ESC (65307) -> clean_up.
+2) handle_movement_keys.
+3) handle_rotation_keys.
+4) handle_toggle_keys.
+5) Se 'm': toggle mouse (usa m_key_down per evitare ripetizione).
+
+FUNZIONE: release_rotation_keys
+Parametri: int keycode, t_game *g
+Ritorno: void
+Passi:
+1) Se 'e' o right arrow -> rotate_left=0.
+2) Se 'q' o left arrow -> rotate_right=0.
+
+FUNZIONE: release_movement_keys
+Parametri: int keycode, t_game *g
+Ritorno: void
+Passi:
+1) Se 'w' -> move_forward=0 ecc.
+
+FUNZIONE: key_release
+Parametri: int keycode, t_game *g
+Ritorno: int
+Passi:
+1) release_movement_keys.
+2) release_rotation_keys.
+3) Se 'm' -> m_key_down=0.
+4) Se 'f' -> arms.key_down=0.
+
+FUNZIONE: handle_toggle_keys
+Parametri: int keycode, t_game *g
+Ritorno: void
+Passi:
+1) Se 'i' -> show_fps = !show_fps.
+2) Se 'f':
+   - se arms.key_down true -> return.
+   - arms.key_down=1.
+   - trigger_arms_animation.
+   - check_and_toggle_door.
+
+--------------------------------------------------------------------
+W) bonus/engine/mouse_management.c
+--------------------------------------------------------------------
+
+FUNZIONE: mouse_move
+Parametri: int x, int y, t_game *g
+Ritorno: int
+Passi:
+1) Se ignore_next_mouse -> reset flag, return 0.
+2) Se mouse_enabled == 0 -> return 0.
+3) center_x = width/2.
+4) delta_x = x - center_x.
+5) Se delta_x != 0 -> apply_rotation(delta_x * MOUSE_SENSITIVITY).
+6) mlx_mouse_move al centro.
+7) ignore_next_mouse = 1.
+
+--------------------------------------------------------------------
+X) bonus/engine/doors.c e door_init.c
+--------------------------------------------------------------------
+
+FUNZIONE: init_single_door
+Parametri: t_door *door, int x, int y, t_texture **door_frames
+Ritorno: void
+Passi:
+1) Imposta x,y.
+2) is_open=0, animation=0.0.
+3) frame_count=1, frames[0]=door_frames[0].
+
+FUNZIONE: init_doors
+Parametri: t_game *g, t_texture **door_frames
+Ritorno: void
+Passi:
+1) door_count=0.
+2) Alloca g->doors (MAX_DOORS).
+3) Scorre mappa.
+4) Se cella 'D':
+   - se door_count>=MAX_DOORS -> clean_up.
+   - init_single_door.
+
+FUNZIONE: is_door_open
+Parametri: t_game *g, int x, int y
+Ritorno: bool
+Passi:
+1) Scorre doors.
+2) Se posizione match -> return is_open.
+3) Altrimenti false.
+
+FUNZIONE: get_door_animation
+Parametri: t_game *g, int x, int y
+Ritorno: float
+Passi:
+1) Scorre doors, return animation.
+
+FUNZIONE: update_door_animations
+Parametri: t_game *g, double delta_time
+Ritorno: void
+Passi:
+1) Se doors vuote -> return.
+2) speed=2.0.
+3) Loop porte:
+   - Se is_open e animation<1.0: aumenta.
+   - Se !is_open e animation>0.0: diminuisce.
+
+FUNZIONE: get_door_frame_texture
+Parametri: t_game *g, int x, int y
+Ritorno: t_texture *
+Passi:
+1) Scorre doors.
+2) Se porta aperta -> NULL (non disegnata).
+3) Altrimenti frames[0].
+
+FUNZIONE: free_door_frames
+Parametri: t_game *g, t_texture **frames
+Ritorno: void
+Passi:
+1) Se frame esiste -> destroy image, free.
+2) free(frames).
+
+--------------------------------------------------------------------
+Y) bonus/engine/arms.c e arms_utils.c
+--------------------------------------------------------------------
+
+FUNZIONE: init_arms
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) Se arms.frame_count>0 -> return.
+2) Alloca 4 texture.
+3) load_single_texture per 4 file arms_0..3.
+4) Imposta frame_count=4, frame_idx=0, anim_dir=1, anim_active=0, key_down=0, anim_time=0.
+
+FUNZIONE: trigger_arms_animation
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) init_arms.
+2) Se anim_active già true -> return.
+3) anim_active=1, anim_dir=1, frame_idx=0, anim_time=0.
+
+FUNZIONE: update_arms_animation
+Parametri: t_game *g, double dt
+Ritorno: void
+Passi:
+1) init_arms.
+2) Se !anim_active -> return.
+3) anim_time += dt.
+4) mentre anim_time >= ARMS_FRAME_TIME:
+   - anim_time -= ARMS_FRAME_TIME
+   - frame_idx += anim_dir
+   - se frame_idx >= last -> anim_dir = -1
+   - se frame_idx <=0 -> reset e anim_active=0
+
+FUNZIONE: free_arms_frames
+Parametri: t_game *g, t_texture **frames
+Ritorno: void
+Passi:
+1) Per i=0..3: se frames[i] -> destroy image, free.
+
+FUNZIONE: get_img_pixel (static)
+Parametri: t_image *img, int x, int y
+Ritorno: unsigned int
+Passi:
+1) Legge pixel da img->addr.
+
+FUNZIONE: set_screen_pixel (static)
+Parametri: t_game *g, int x, int y, unsigned int px
+Ritorno: void
+Passi:
+1) Scrive pixel nello schermo.
+
+FUNZIONE: is_chroma_green (static)
+Parametri: unsigned int px
+Ritorno: int
+Passi:
+1) Estrae r,g,b.
+2) Return 1 se verde dominante.
+
+FUNZIONE: draw_arms_pixels (static)
+Parametri: t_game *g, t_image *img
+Ritorno: void
+Passi:
+1) Calcola start_x, start_y.
+2) Loop su tutti i pixel dell’immagine.
+3) Se chroma green -> skip.
+4) Altrimenti set_screen_pixel.
+
+FUNZIONE: draw_arms_overlay
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) init_arms.
+2) Prende frame corrente.
+3) draw_arms_pixels.
+
+--------------------------------------------------------------------
+Z) bonus/engine/minimap.c e minimap_utils.c
+--------------------------------------------------------------------
+
+FUNZIONE: draw_minimap_grid
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) Loop su celle minimap.
+2) draw_minimap_square per ogni cella.
+
+FUNZIONE: draw_player_indicator
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) px,py al centro minimap.
+2) size=3.
+3) draw_player_pixel.
+
+FUNZIONE: draw_minimap_border
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) Disegna rettangolo bianco attorno minimap.
+
+FUNZIONE: draw_minimap
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) draw_minimap_grid.
+2) draw_minimap_border.
+3) draw_player_indicator.
+
+FUNZIONE: get_minimap_color
+Parametri: t_game *g, int mx, int my
+Ritorno: t_color
+Passi:
+1) Se fuori bounds -> nero.
+2) Se '1' -> grigio scuro.
+3) Se 'D' -> arancione.
+4) Altrimenti grigio.
+
+FUNZIONE: draw_minimap_square
+Parametri: t_game *g, int mx, int my
+Ritorno: void
+Passi:
+1) Calcola mappa reale basata su player pos.
+2) Loop su pixel della cella.
+3) put_pixel se dentro area minimap.
+
+FUNZIONE: draw_player_pixel
+Parametri: t_game *g, int px, int py, int size
+Ritorno: void
+Passi:
+1) Disegna quadrato rosso centrato su px,py.
+
+--------------------------------------------------------------------
+AA) bonus/engine/texture.c
+--------------------------------------------------------------------
+
+FUNZIONE: setup_texture_address
+Parametri: t_game *g, t_texture *tex
+Ritorno: int
+Passi:
+1) mlx_get_data_addr.
+2) Se fallisce -> destroy image, free, return 0.
+
+FUNZIONE: load_single_texture
+Parametri: t_game *g, t_texture *tex, const char *path
+Ritorno: int
+Passi:
+1) allocate_and_load_xpm.
+2) setup_texture_address.
+
+FUNZIONE: init_walls (static)
+Parametri: t_game *g
+Ritorno: bool
+Passi:
+1) Carica tutte le texture muri.
+2) Se tex_box presente -> carica.
+
+FUNZIONE: init_doors_text (static)
+Parametri: t_game *g, t_texture **frames
+Ritorno: bool
+Passi:
+1) Carica "./textures/door_closed.xpm".
+
+FUNZIONE: init_textures
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) init_walls; se fallisce -> cleanup_game_fields + exit.
+2) door_frames = allocate_door_frames.
+3) init_doors_text; se fallisce -> free_door_frames.
+4) g->door_frames=door_frames.
+5) init_doors(g, door_frames).
+
+--------------------------------------------------------------------
+AB) bonus/engine/fps.c
+--------------------------------------------------------------------
+
+FUNZIONE: clamp_positive
+Parametri: double value
+Ritorno: double
+Passi:
+1) Se value<0 -> 0.
+2) else return value.
+
+FUNZIONE: update_buffered_fps
+Parametri: t_game *g, double *buff_fps, double *last_update
+Ritorno: void
+Passi:
+1) current_time=now_ms.
+2) Se passato >= 1s:
+   - buff_fps = g->perf.fps se >0 altrimenti fps_raw.
+   - last_update = current_time.
+
+FUNZIONE: now_ms
+Parametri: void
+Ritorno: double
+Passi:
+1) gettimeofday.
+2) return ms.
+
+FUNZIONE: perf_update
+Parametri: t_perf *p
+Ritorno: void
+Passi:
+1) t=now_ms.
+2) Se last_ms==0 -> last_ms=t, return.
+3) dt = clamp_positive(t-last_ms).
+4) last_ms=t.
+5) fps_now = 1000/dt.
+6) fps_raw = fps_now.
+7) fps = media esponenziale.
+
+FUNZIONE: draw_fps_overlay
+Parametri: t_game *g
+Ritorno: void
+Passi:
+1) static last_update, buffered_fps.
+2) update_buffered_fps.
+3) Converte in stringa.
+4) mlx_string_put.
+
+--------------------------------------------------------------------
+AC) bonus/engine/mouse_management.c già visto
+--------------------------------------------------------------------
+
+--------------------------------------------------------------------
+AD) bonus/engine/texture_select.c già visto
+--------------------------------------------------------------------
+
+====================================================================
+13) FLUSSO DEI DATI TRA FUNZIONI
+====================================================================
+- Dati file .cub:
+  -> read_file_lines produce parse->file_lines.
+  -> parse_file popola tex_* e colori.
+  -> extract_map produce map->grid.
+  -> validate_map usa map->grid per player e bordi.
+
+- Dati player:
+  -> validate_and_find_player imposta pos e direzione.
+  -> update_player_position/rotation aggiorna pos/dir a ogni frame.
+  -> raycasting usa pos/dir per calcolare raggi.
+
+- Dati rendering:
+  -> cast_one_ray produce drawing (wall_distance, line_height, draw_start/end).
+  -> draw_columns usa drawing per pixel e texture.
+
+- Dati porte:
+  -> init_doors legge map->grid e crea array doors.
+  -> check_and_toggle_door cambia is_open.
+  -> update_door_animations aggiorna animation.
+  -> raycasting usa is_open per collisioni.
+  -> select_tex_face sceglie texture porta.
+
+- Dati arms:
+  -> trigger_arms_animation attiva animazione.
+  -> update_arms_animation cambia frame_idx.
+  -> draw_arms_overlay disegna il frame corrente.
+
+====================================================================
+14) CONDIZIONI E CICLI (SPIEGAZIONE SEMPLICE)
+====================================================================
+- if/else nel parsing: scelgono se una riga è texture o colore o mappa.
+- if/else nella validazione: controllano errori e mappe aperte.
+- loop su righe/colonne della mappa: per costruire e validare.
+- loop principale raycasting: per ogni colonna dello schermo.
+- loop su pixel: per disegnare pareti, soffitto, pavimento, minimap.
+- loop su doors: per aggiornare animazioni e toggle.
+
+Ad ogni iterazione del loop principale (loop_hook):
+1) Aggiorna tempi.
+2) Aggiorna porte.
+3) Aggiorna animazioni braccia.
+4) Calcola movimento/rotazione player.
+5) Lancia un ray per ogni colonna.
+6) Disegna minimap e overlay.
+7) Mostra immagine.
+
+====================================================================
+15) NOTE FINALI
+====================================================================
+- Alcune funzioni dichiarate negli header non hanno implementazione nel bonus (es. close_window). Non entrano nel flusso reale.
+- Il programma usa MiniLibX e richiede un ambiente grafico funzionante.
+
+FINE

@@ -6,22 +6,21 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 21:54:41 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/11 22:11:52 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 23:28:22 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
 
 #ifndef ENGINE_H
 # define ENGINE_H
 
 # include <math.h>
 
-typedef struct	s_ray t_ray; 
-typedef struct	s_perf t_perf;
-typedef struct	s_game t_game;
-typedef struct	s_color t_color;
-typedef struct	s_image t_image; 
-typedef struct	s_texture t_texture;
+typedef struct s_ray		t_ray;
+typedef struct s_perf		t_perf;
+typedef struct s_game		t_game;
+typedef struct s_color		t_color;
+typedef struct s_image		t_image;
+typedef struct s_texture	t_texture;
 
 # define MOVE_SPEED 0.08
 # define ROT_SPEED  0.07
@@ -32,32 +31,18 @@ typedef struct	s_texture t_texture;
 # define ARMS_FRAME_TIME 0.06
 # define ARMS_TRANSPARENT 0xFF00FF
 
-
-# define HEIGHT					g->map->height
-# define WIDTH					g->map->width
-# define DIR_X					g->player->dir_x
-# define DIR_Y					g->player->dir_y
-# define PLANE_X				g->player->plane_x
-# define PLANE_Y				g->player->plane_y
-# define POS_X					g->player->pos_x
-# define POS_Y					g->player->pos_y
-# define MAP_MATRIX				g->map->grid
-# define WALL_DISTANCE_ARRAY	g->player->columns_distance
-# define WALL					g->wall
-
-
 typedef struct s_ray
 {
-	double	rayDirX;
-	double	rayDirY;
-	int		mapX;
-	int		mapY;
-	double	sideDistX;
-	double	sideDistY;
-	double	deltaDistX;
-	double	deltaDistY;
-	int		stepX;
-	int		stepY;
+	double	ray_dir_x;
+	double	ray_dir_y;
+	int		map_x;
+	int		map_y;
+	double	side_dist_x;
+	double	side_dist_y;
+	double	delta_dist_x;
+	double	delta_dist_y;
+	int		step_x;
+	int		step_y;
 	int		hit;
 	int		side;
 	int		distance_exceeded;
@@ -95,23 +80,12 @@ typedef struct s_arms
 	double		anim_time;
 }			t_arms;
 
-# define SIDE_DIST_X	ray->sideDistX
-# define SIDE_DIST_Y	ray->sideDistY
-# define RAY_DIR_X		ray->rayDirX
-# define RAY_DIR_Y		ray->rayDirY
-# define MAP_X			ray->mapX
-# define MAP_Y			ray->mapY
-# define STEP_X			ray->stepX
-# define STEP_Y			ray->stepY
-# define DELTA_DIST_X	ray->deltaDistX
-# define DELTA_DIST_Y	ray->deltaDistY
-
 //arms.c
-void	trigger_arms_animation(t_game *g);
-void	update_arms_animation(t_game *g, double dt);
-void	draw_arms_overlay(t_game *g);
-void	free_arms_frames(t_game *g, t_texture **frames);
-void	init_arms(t_game *g);
+void		trigger_arms_animation(t_game *g);
+void		update_arms_animation(t_game *g, double dt);
+void		draw_arms_overlay(t_game *g);
+void		free_arms_frames(t_game *g, t_texture **frames);
+void		init_arms(t_game *g);
 
 //clean_up.c
 void		destroy_mlx_image(t_game *g);
@@ -124,7 +98,7 @@ void		free_arms_frames(t_game *g, t_texture **frames);
 
 // colours_management.c
 t_color		shade_color(t_color col, double factor);
-int		get_tex_x(t_ray *ray, t_game *g, t_image *texture,
+int			get_tex_x(t_ray *ray, t_game *g, t_image *texture,
 				double wall_distance);
 int			get_tex_y(int y, t_drawing *draw, t_image *tex);
 t_color		get_texture_pixel(t_image *tex, int tex_x, int tex_y, t_game *g);

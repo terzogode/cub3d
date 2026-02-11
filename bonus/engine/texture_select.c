@@ -39,11 +39,12 @@ static t_texture	*select_door_texture(t_drawing *draw, t_game *g)
 	int		door_x;
 	int		door_y;
 
-	door_x = draw->ray->mapX;
-	door_y = draw->ray->mapY;
-	if (door_x < 0 || door_x >= WIDTH || door_y < 0 || door_y >= HEIGHT)
+	door_x = draw->ray->map_x;
+	door_y = draw->ray->map_y;
+	if (door_x < 0 || door_x >= g->map->width
+		|| door_y < 0 || door_y >= g->map->height)
 		return (NULL);
-	if (MAP_MATRIX[door_y][door_x] != 'D')
+	if (g->map->grid[door_y][door_x] != 'D')
 		return (NULL);
 	return (get_match_door(g, door_x, door_y, get_side_type(draw->ray->side)));
 }
@@ -57,20 +58,20 @@ t_texture	*select_tex_face(t_drawing *draw, t_game *g)
 	door_tex = select_door_texture(draw, g);
 	if (door_tex)
 		return (door_tex);
-	x = draw->ray->mapX;
-	y = draw->ray->mapY;
-	if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
+	x = draw->ray->map_x;
+	y = draw->ray->map_y;
+	if (x >= 0 && x < g->map->width && y >= 0 && y < g->map->height)
 	{
-		if (MAP_MATRIX[y][x] == 'B')
+		if (g->map->grid[y][x] == 'B')
 			return (g->tex_box);
 	}
 	if (draw->ray->side == 0)
 	{
-		if (draw->ray->rayDirX > 0)
+		if (draw->ray->ray_dir_x > 0)
 			return (g->tex_east);
 		return (g->tex_west);
 	}
-	if (draw->ray->rayDirY > 0)
+	if (draw->ray->ray_dir_y > 0)
 		return (g->tex_south);
 	return (g->tex_north);
 }
