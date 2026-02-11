@@ -6,30 +6,11 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 18:49:50 by mattebrighi       #+#    #+#             */
-/*   Updated: 2026/02/10 19:11:56 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 22:06:32 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3d.h"
-
-int	allocate_and_load_xpm(t_game *g, t_texture *tex, const char *path)
-{
-	tex->img = malloc(sizeof(t_image));
-	if (!tex->img)
-		return (0);
-	tex->img->img = mlx_xpm_file_to_image(g->mlx_init, (char *)path,
-			&tex->img->width, &tex->img->height);
-	if (!tex->img->img)
-	{
-		fd_printf(2, "Error: Could not load texture: ");
-		fd_printf(2, (char *)path);
-		fd_printf(2, "\n");
-		free(tex->img);
-		tex->img = NULL;
-		return (0);
-	}
-	return (1);
-}
 
 int	setup_texture_address(t_game *g, t_texture *tex)
 {

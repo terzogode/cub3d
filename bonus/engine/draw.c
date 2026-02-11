@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 19:07:54 by mattebrighi       #+#    #+#             */
-/*   Updated: 2026/02/10 15:44:52 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 21:40:20 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,17 +25,6 @@ void	draw_ceiling_part(t_game *g, int x, int draw_start)
 			factor = 0.3;
 		put_pixel(g->screen, x, y++, shade_color(*g->ceiling, factor));
 	}
-}
-
-void	draw_wall_part(t_game *g, int x, t_drawing *draw, double factor)
-{
-	t_texture	*tex_face;
-
-	tex_face = select_tex_face(draw, g);
-	if (tex_face && tex_face->img)
-		draw_textured_column(g, x, draw, tex_face, factor);
-	else
-		draw_solid_column(g, x, draw, factor);
 }
 
 void	draw_floor_part(t_game *g, int x, int draw_end)

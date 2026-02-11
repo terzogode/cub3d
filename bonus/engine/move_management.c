@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   move_management.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 20:02:27 by mattebrighi       #+#    #+#             */
-/*   Updated: 2026/02/04 00:15:13 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/11 21:42:04 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ static void	try_move_x(t_game *g, double step)
 
 	tile = '1';
 	if (step == 0.0)
-		return;
+		return ;
 	off = PLAYER_RADIUS;
 	if (step < 0.0)
 		off = -PLAYER_RADIUS;
@@ -45,7 +45,7 @@ static void	try_move_y(t_game *g, double step)
 
 	tile = '1';
 	if (step == 0.0)
-		return;
+		return ;
 	off = PLAYER_RADIUS;
 	if (step < 0.0)
 		off = -PLAYER_RADIUS;
@@ -77,16 +77,4 @@ void	lateral_move(t_game *g, int direction)
 	d = (double)direction;
 	try_move_x(g, PLANE_X * MOVE_SPEED * d);
 	try_move_y(g, PLANE_Y * MOVE_SPEED * d);
-}
-
-void	update_player_position(t_game *g)
-{
-	if (g->player->move_forward)
-		move_forward(g);
-	if (g->player->move_backward)
-		move_backward(g);
-	if (g->player->move_left)
-		lateral_move(g, -1);
-	if (g->player->move_right)
-		lateral_move(g, 1);
 }

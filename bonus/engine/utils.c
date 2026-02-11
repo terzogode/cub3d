@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 14:42:39 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/10 19:19:01 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 21:42:08 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ void	check_and_toggle_door(t_game *g)
 				if ((int)POS_X == door_x && (int)POS_Y == door_y)
 				{
 					i++;
-					continue;
+					continue ;
 				}
 			}
 			g->doors[i].is_open = !g->doors[i].is_open;
@@ -96,4 +96,16 @@ t_texture	**allocate_door_frames(void)
 		i++;
 	}
 	return (frames);
+}
+
+void	update_player_position(t_game *g)
+{
+	if (g->player->move_forward)
+		move_forward(g);
+	if (g->player->move_backward)
+		move_backward(g);
+	if (g->player->move_left)
+		lateral_move(g, -1);
+	if (g->player->move_right)
+		lateral_move(g, 1);
 }

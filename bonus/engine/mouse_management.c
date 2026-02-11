@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   mouse_management.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 19:39:07 by mattebrighi       #+#    #+#             */
-/*   Updated: 2026/01/30 23:49:22 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/11 21:30:01 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3d.h"
 
-int mouse_move(int x, int y, t_game *g)
+int	mouse_move(int x, int y, t_game *g)
 {
 	int	delta_x;
 	int	center_x;
@@ -35,6 +35,3 @@ int mouse_move(int x, int y, t_game *g)
 	g->player->ignore_next_mouse = 1;
 	return (0);
 }
-
-
-

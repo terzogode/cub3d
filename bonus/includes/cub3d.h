@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub3d.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/19 14:41:04 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/02/11 18:03:42 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/11 21:48:06 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,6 +106,15 @@ typedef struct s_parse
 	bool	is_ceiling_set;
 }				t_parse;
 
+// Struttura per parametri minimappa (solo bonus)
+typedef struct s_minimap
+{
+	int		width;
+	int		height;
+	int		padding;
+	int		scale;
+} 				t_minimap;
+
 // Struttura principale
 typedef struct s_game
 {
@@ -133,6 +142,7 @@ typedef struct s_game
 	t_arms		arms;
 	bool		show_fps;
 	t_perf		perf;
+	t_minimap	minimap;
 }				t_game;
 
 // ==============================================

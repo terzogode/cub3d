@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 21:54:41 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/10 19:11:56 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 22:11:52 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,6 @@ void	draw_arms_overlay(t_game *g);
 void	free_arms_frames(t_game *g, t_texture **frames);
 void	init_arms(t_game *g);
 
-
 //clean_up.c
 void		destroy_mlx_image(t_game *g);
 void		destroy_doors(t_game *g);
@@ -123,10 +122,9 @@ int			clean_up(t_game *g);
 void		free_door_frames(t_game *g, t_texture **frames);
 void		free_arms_frames(t_game *g, t_texture **frames);
 
-
 // colours_management.c
 t_color		shade_color(t_color col, double factor);
-int			get_tex_x(t_ray *ray, t_game *g, int side, t_image *texture,
+int		get_tex_x(t_ray *ray, t_game *g, t_image *texture,
 				double wall_distance);
 int			get_tex_y(int y, t_drawing *draw, t_image *tex);
 t_color		get_texture_pixel(t_image *tex, int tex_x, int tex_y, t_game *g);
@@ -147,8 +145,6 @@ void		draw_columns(t_game *g, int x, t_drawing *draw);
 t_texture	*select_tex_face(t_drawing *draw, t_game *g);
 
 // texture_draw.c
-void		draw_textured_column(t_game *g, int x, t_drawing *draw,
-				t_texture *tex_face, double factor);
 void		draw_solid_column(t_game *g, int x, t_drawing *draw, double factor);
 
 // fps.c
@@ -165,7 +161,6 @@ void		init_mlx(t_game *g);
 void		init_doors(t_game *g, t_texture **door_frames);
 void		init_single_door(t_door *door, int x, int y,
 				t_texture **door_frames);
-
 
 // key_management.c
 void		handle_movement_keys(int keycode, t_game *g);
@@ -233,7 +228,7 @@ void		draw_minimap(t_game *g);
 
 // minimap_utils.c
 t_color		get_minimap_color(t_game *g, int mx, int my);
-void		draw_minimap_square(t_game *g, int px, int py, int mx, int my);
+void		draw_minimap_square(t_game *g, int mx, int my);
 void		draw_player_pixel(t_game *g, int px, int py, int size);
 
 bool		struct_init(t_game *g);
@@ -241,4 +236,3 @@ void		init_game(t_game *g);
 void		init_mlx(t_game *g);
 
 #endif
-

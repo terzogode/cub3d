@@ -96,6 +96,7 @@ SRCS_ENG_BONUS	= $(ENG_DIR_BONUS)/init.c \
 			  $(ENG_DIR_BONUS)/move_management.c \
 			  $(ENG_DIR_BONUS)/rotation.c \
 			  $(ENG_DIR_BONUS)/ray_casting.c \
+			  $(ENG_DIR_BONUS)/ray_casting_utils.c \
 			  $(ENG_DIR_BONUS)/dda_implementation.c \
 			  $(ENG_DIR_BONUS)/colours_management.c \
 			  $(ENG_DIR_BONUS)/draw.c \

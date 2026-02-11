@@ -12,42 +12,56 @@
 
 #include "cub3d.h"
 
-void	draw_textured_column(t_game *g, int x, t_drawing *draw,
-		t_texture *tex_face, double factor)
+static void	draw_textured_column(t_game *g, int x, t_texture *tex_face,
+		double factor)
 {
 	int			y;
-	int			tex_x;
+	int			tx_x;
 	double		tex_pos;
 	double		step;
 	t_image		*img;
 
 	img = tex_face->img;
-	if (draw->line_height <= 0)
-		return ;
-	tex_x = get_tex_x(draw->ray, g, draw->ray->side, img, draw->wall_distance);
-	step = (double)img->height / (double)draw->line_height;
-	tex_pos = (draw->draw_start - g->height / 2 + draw->line_height / 2) * step;
-	y = draw->draw_start;
-	while (y <= draw->draw_end)
+	tx_x = get_tex_x(g->drawing->ray, g, img, g->drawing->wall_distance);
+	step = (double)img->height / (double)g->drawing->line_height;
+	tex_pos = (g->drawing->draw_start - g->height / 2
+			+ g->drawing->line_height / 2) * step;
+	y = g->drawing->draw_start;
+	while (y <= g->drawing->draw_end)
 	{
 		put_pixel(g->screen, x, y,
-			shade_color(get_texture_pixel(img, tex_x, (int)tex_pos, g),
-			factor));
+			shade_color(get_texture_pixel(img, tx_x, (int)tex_pos, g),
+				factor));
 		tex_pos += step;
 		y++;
 	}
 }
 
-void	draw_solid_column(t_game *g, int x, t_drawing *draw, double factor)
+void	draw_wall_part(t_game *g, int x, t_drawing *draw, double factor)
 {
-	int		y;
-	t_color	pixel;
+	t_texture	*tex_face;
 
-	y = draw->draw_start;
-	while (y <= draw->draw_end)
+	tex_face = select_tex_face(draw, g);
+	if (!tex_face || !tex_face->img || draw->line_height <= 0)
+		return ;
+	draw_textured_column(g, x, tex_face, factor);
+}
+
+int	allocate_and_load_xpm(t_game *g, t_texture *tex, const char *path)
+{
+	tex->img = malloc(sizeof(t_image));
+	if (!tex->img)
+		return (0);
+	tex->img->img = mlx_xpm_file_to_image(g->mlx_init, (char *)path,
+			&tex->img->width, &tex->img->height);
+	if (!tex->img->img)
 	{
-		pixel = shade_color(*g->wall, factor);
-		put_pixel(g->screen, x, y, pixel);
-		y++;
+		fd_printf(2, "Error: Could not load texture: ");
+		fd_printf(2, (char *)path);
+		fd_printf(2, "\n");
+		free(tex->img);
+		tex->img = NULL;
+		return (0);
 	}
+	return (1);
 }

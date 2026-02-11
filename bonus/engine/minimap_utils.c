@@ -12,11 +12,6 @@
 
 #include "cub3d.h"
 
-#define MINIMAP_WIDTH 150
-#define MINIMAP_HEIGHT 150
-#define MINIMAP_PADDING 10
-#define MINIMAP_SCALE 10
-
 t_color	get_minimap_color(t_game *g, int mx, int my)
 {
 	t_color	c;
@@ -43,22 +38,28 @@ t_color	get_minimap_color(t_game *g, int mx, int my)
 	}
 }
 
-void	draw_minimap_square(t_game *g, int px, int py, int mx, int my)
+void	draw_minimap_square(t_game *g, int mx, int my)
 {
-	int		x;
-	int		y;
-	t_color	c;
+	t_minimap	*m;
+	int			x;
+	int			y;
+	t_color		c;
 
-	c = get_minimap_color(g, mx, my);
+	m = &g->minimap;
+	c = get_minimap_color(g,
+			(int)g->player->pos_x - ((m->width / m->scale) / 2) + mx,
+			(int)g->player->pos_y - ((m->height / m->scale) / 2) + my);
 	y = 0;
-	while (y < MINIMAP_SCALE)
+	while (y < m->scale)
 	{
 		x = 0;
-		while (x < MINIMAP_SCALE)
+		while (x < m->scale)
 		{
-			if (px + x < MINIMAP_PADDING + MINIMAP_WIDTH
-				&& py + y < MINIMAP_PADDING + MINIMAP_HEIGHT)
-				put_pixel(g->screen, px + x, py + y, c);
+			if (m->padding + (mx * m->scale) + x < m->padding + m->width
+				&& m->padding + (my * m->scale) + y < m->padding + m->height)
+				put_pixel(g->screen,
+					m->padding + (mx * m->scale) + x,
+					m->padding + (my * m->scale) + y, c);
 			x++;
 		}
 		y++;
@@ -78,8 +79,10 @@ void	draw_player_pixel(t_game *g, int px, int py, int size)
 		x = -size;
 		while (x <= size)
 		{
-			if (px + x >= MINIMAP_PADDING && px + x < MINIMAP_PADDING + MINIMAP_WIDTH
-				&& py + y >= MINIMAP_PADDING && py + y < MINIMAP_PADDING + MINIMAP_HEIGHT)
+			if (px + x >= g->minimap.padding
+				&& px + x < g->minimap.padding + g->minimap.width
+				&& py + y >= g->minimap.padding
+				&& py + y < g->minimap.padding + g->minimap.height)
 				put_pixel(g->screen, px + x, py + y, player_color);
 			x++;
 		}

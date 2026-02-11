@@ -43,7 +43,7 @@ void	init_doors(t_game *g, t_texture **door_frames)
 					clean_up(g);
 				init_single_door(&g->doors[g->door_count++], x, y, door_frames);
 			}
-		x++;
+			x++;
 		}
 		y++;
 	}

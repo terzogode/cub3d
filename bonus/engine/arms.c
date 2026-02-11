@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:53:03 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/10 18:23:17 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 21:28:47 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,16 +15,16 @@
 static unsigned int	get_img_pixel(t_image *img, int x, int y)
 {
 	return (*(unsigned int *)(img->addr
-			+ y * img->line_len + x * (img->bpp / 8)));
+		+ y * img->line_len + x * (img->bpp / 8)));
 }
 
-static void			set_screen_pixel(t_game *g, int x, int y, unsigned int px)
+static void	set_screen_pixel(t_game *g, int x, int y, unsigned int px)
 {
 	*(unsigned int *)(g->screen->addr
 			+ y * g->screen->line_len + x * (g->screen->bpp / 8)) = px;
 }
 
-static int			is_chroma_green(unsigned int px)
+static int	is_chroma_green(unsigned int px)
 {
 	unsigned int	r;
 	unsigned int	g;
@@ -36,7 +36,7 @@ static int			is_chroma_green(unsigned int px)
 	return (g >= 150 && r <= 120 && b <= 120);
 }
 
-static void			draw_arms_pixels(t_game *g, t_image *img)
+static void	draw_arms_pixels(t_game *g, t_image *img)
 {
 	unsigned int	px;
 	int				x;

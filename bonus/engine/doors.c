@@ -73,7 +73,6 @@ t_texture	*get_door_frame_texture(t_game *g, int x, int y)
 {
 	int		i;
 
-
 	i = 0;
 	while (i < g->door_count)
 	{

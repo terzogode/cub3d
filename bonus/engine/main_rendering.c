@@ -6,7 +6,7 @@
 /*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 21:54:17 by mbrighi           #+#    #+#             */
-/*   Updated: 2026/02/10 18:09:31 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 21:31:10 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,5 +44,3 @@ void	rendering(t_game *g)
 	draw_minimap(g);
 	draw_arms_overlay(g);
 }
-
-

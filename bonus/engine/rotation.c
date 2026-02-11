@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   rotation.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mattebrighi <mattebrighi@student.42.fr>    +#+  +:+       +#+        */
+/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 19:41:21 by mattebrighi       #+#    #+#             */
-/*   Updated: 2026/01/28 22:59:42 by mattebrighi      ###   ########.fr       */
+/*   Updated: 2026/02/11 21:33:17 by mbrighi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,5 +32,3 @@ void	apply_rotation(t_game *g, double angle)
 	PLANE_X = PLANE_X * cos(angle) - PLANE_Y * sin(angle);
 	PLANE_Y = old_plane_x * sin(angle) + PLANE_Y * cos(angle);
 }
-
-

@@ -12,9 +12,17 @@
 
 #include "cub3d.h"
 
+static void	init_minimap(t_game *g)
+{
+	g->minimap.width = 150;
+	g->minimap.height = 150;
+	g->minimap.padding = 10;
+	g->minimap.scale = 10;
+}
+
 void	init_game(t_game *g)
 {
-	int i;
+	int	i;
 
 	i = 0;
 	init_color(g);
@@ -24,11 +32,12 @@ void	init_game(t_game *g)
 		fd_printf(2, "Error: Failed to allocate columns_distance\n");
 		clean_up(g);
 	}
-	while(i < g->width)
+	while (i < g->width)
 	{
 		g->player->columns_distance[i] = 0;
 		i++;
 	}
+	init_minimap(g);
 	g->drawing = ft_calloc(1, sizeof(t_drawing));
 	if (!g->drawing)
 	{
@@ -60,7 +69,7 @@ void	init_mlx(t_game *g)
 	g->screen->width = g->width;
 	g->screen->height = g->height;
 	g->screen->addr = mlx_get_data_addr(g->screen->img,
-		&g->screen->bpp, &g->screen->line_len, &g->screen->endian);
+			&g->screen->bpp, &g->screen->line_len, &g->screen->endian);
 	if (!g->screen->addr)
 		clean_up(g);
 	g->pix = (t_color *)g->screen->addr;
