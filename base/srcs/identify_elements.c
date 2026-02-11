@@ -6,7 +6,7 @@
 /*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/20 15:22:07 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/01/31 15:21:53 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/11 18:28:11 by mcecchel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,30 +38,36 @@ static int	handle_end_errors(int elem_found)
 	return (-1);
 }
 
+static int	check_line_type(t_game *game, int i, int elem_found)
+{
+	if (is_line_empty(game->parse->file_lines[i]))
+		return (0);
+	if (elem_found == 6)
+		return (1);
+	if (is_valid_identifier(game->parse->file_lines[i]))
+		return (2);
+	return (-1);
+}
+
 int	find_map_start(t_game *game)
 {
 	int	i;
 	int	elem_found;
+	int	result;
 
 	i = 0;
 	elem_found = 0;
 	while (i < game->parse->line_count)
 	{
-		if (is_line_empty(game->parse->file_lines[i]))
-		{
-			i++;
-			continue ;
-		}
-		if (elem_found == 6)
+		result = check_line_type(game, i, elem_found);
+		if (result == 1)
 			return (handle_map_found(game, i));
-		if (is_valid_identifier(game->parse->file_lines[i]))
-		{
+		if (result == 2)
 			elem_found++;
-			i++;
-			continue ;
-		}
-		return (handle_invalid_line(game->parse->file_lines[i],
-				i + 1, elem_found));
+		else if (result == -1)
+			return (handle_invalid_line(game->parse->file_lines[i],
+					i + 1, elem_found));
+		i++;
 	}
 	return (handle_end_errors(elem_found));
 }

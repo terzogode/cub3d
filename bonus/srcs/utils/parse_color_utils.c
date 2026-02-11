@@ -6,7 +6,7 @@
 /*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 18:07:35 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/01/31 17:27:18 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/11 18:12:42 by mcecchel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,18 +39,14 @@ char	**validate_and_split_rgb(char *rgb_str)
 	}
 	rgb_strs = ft_split(rgb_str, ',');
 	if (!rgb_strs)
-	{
-		fd_printf(2, "Error: Memory allocation failed\n");
-		return (NULL);
-	}
+		return (fd_printf(2, "Error: Memory allocation failed\n"), NULL);
 	i = 0;
 	while (rgb_strs[i])
 		i++;
 	if (i != 3)
 	{
 		fd_printf(2, "Error: Invalid RGB format (expected 3 values)\n");
-		free_array(rgb_strs);
-		return (NULL);
+		return (free_array(rgb_strs), NULL);
 	}
 	return (rgb_strs);
 }

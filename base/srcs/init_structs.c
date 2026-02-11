@@ -39,7 +39,7 @@ bool	struct_init(t_game *g)
 	g->tex_east = initialize_texture();
 	g->parse = initialize_parse();
 	if (!g->map || !g->player || !g->floor || !g->wall || !g->ceiling
-		|| !g->tex_north || !g->tex_south || !g->tex_west 
+		|| !g->tex_north || !g->tex_south || !g->tex_west
 		|| !g->tex_east || !g->parse)
 		return (1);
 	initialize_mlx_fields(g);

@@ -6,7 +6,7 @@
 /*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 19:31:48 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/01/28 16:23:39 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/11 16:44:06 by mcecchel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,10 @@
 int	validate_map(t_game *game)
 {
 	fd_printf(1, "🔍 Validating map...\n");
-	// Valido caratteri e cerco player
 	if (validate_and_find_player(game) == -1)
 		return (-1);
-	// Valido bordi mappa
 	if (validate_map_borders(game) == -1)
 		return (-1);
-	fd_printf(1, "✅ Map validation successful!\n");
+	fd_printf(1, "✅ Map validation successful\n");
 	return (0);
 }

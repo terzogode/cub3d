@@ -87,3 +87,18 @@ t_texture	*get_door_frame_texture(t_game *g, int x, int y)
 	}
 	return (NULL);
 }
+
+void	free_door_frames(t_game *g, t_texture **frames)
+{
+	if (!frames)
+		return ;
+	if (frames[0])
+	{
+		if (frames[0]->img && frames[0]->img->img && g->mlx_init)
+			mlx_destroy_image(g->mlx_init, frames[0]->img->img);
+		if (frames[0]->img)
+			free(frames[0]->img);
+		free(frames[0]);
+	}
+	free(frames);
+}

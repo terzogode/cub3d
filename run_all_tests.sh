@@ -18,7 +18,7 @@ run_test() {
     local should_pass="$3"
     
     echo -e "${YELLOW}Testing: $test_name${NC}"
-    ./cub3D "$map_file" > /dev/null 2>&1
+    ./cub3D_bonus "$map_file" > /dev/null 2>&1
     result=$?
     
     if [ "$should_pass" = "pass" ]; then

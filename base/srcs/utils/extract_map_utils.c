@@ -6,7 +6,7 @@
 /*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 14:09:43 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/01/28 17:11:57 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/11 16:33:53 by mcecchel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@ int	get_map_height(t_game *game)
 	i = game->parse->map_start;
 	while (i < game->parse->line_count)
 	{
-		// Conta solo righe non vuote
 		if (!is_line_empty(game->parse->file_lines[i]))
 			height++;
 		i++;
@@ -60,17 +59,14 @@ char	*pad_map_line(char *line, int width)
 	if (!padded_line)
 		return (NULL);
 	line_len = ft_strlen(line);
-	// Rimuovi il newline se presente
 	if (line_len > 0 && line[line_len - 1] == '\n')
 		line_len--;
 	i = 0;
-	// Copio la riga originale (senza newline)
 	while (i < line_len)
 	{
 		padded_line[i] = line[i];
 		i++;
 	}
-	// Aggiungo padding di spazi fino a matchare width
 	while (i < width)
 	{
 		padded_line[i] = ' ';

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parse_file.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
+/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/23 17:00:37 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/02/10 15:47:41 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 18:23:48 by mcecchel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,18 +18,15 @@ static int	parse_element(t_game *game, char *line)
 	int	i;
 
 	i = skip_spaces(line, 0);
-	// Controllo se è una texture (NO, SO, WE, EA, B)
 	if (ft_strncmp(&line[i], "NO ", 3) == 0
 		|| ft_strncmp(&line[i], "SO ", 3) == 0
 		|| ft_strncmp(&line[i], "WE ", 3) == 0
 		|| ft_strncmp(&line[i], "EA ", 3) == 0
 		|| ft_strncmp(&line[i], "B ", 2) == 0)
 		return (parse_texture(game, line));
-	// Controllo se è un colore (F, C)
 	if (ft_strncmp(&line[i], "F ", 2) == 0
 		|| ft_strncmp(&line[i], "C ", 2) == 0)
 		return (parse_color(game, line));
-	// Se non e' texture, colore o muro, errore
 	if (line[i] && line[i] != '1')
 	{
 		fd_printf(2, "Error: Invalid element identifier: '%c'\n", line[i]);
@@ -46,20 +43,13 @@ static int	parse_elements(t_game *game)
 	i = 0;
 	while (i < game->parse->map_start)
 	{
-		// Salta righe vuote
 		if (is_line_empty(game->parse->file_lines[i]))
 		{
 			i++;
 			continue ;
 		}
-		// Parsa elemento singolo
 		if (parse_element(game, game->parse->file_lines[i]) < 0)
 			return (-1);
-		// {
-		// 	fd_printf(2, "Error: Failed to parse line %d\n",
-		// 		i + 1, game->parse->file_lines[i]);
-		// 	return (-1); // Errore nel parsing
-		// }
 		i++;
 	}
 	return (0);
@@ -88,15 +78,15 @@ static int	are_all_elements_set(t_game *game)
 int	parse_file(t_game *game, char *filename)
 {
 	if (load_file_to_parse(game, filename) == -1)
-		return (-1); // Errore nel caricamento del file
+		return (-1);
 	if (find_map_start(game) == -1)
-		return (-1); // Errore nel trovare inizio mappa
+		return (-1);
 	if (parse_elements(game) == -1)
-		return (-1); // Errore nel parsing degli elementi
+		return (-1);
 	if (are_all_elements_set(game) == -1)
-		return (-1); // Mancano elementi obbligatori
+		return (-1);
 	if (extract_map(game) == -1)
-		return (-1); // Errore nell'estrazione della mappa
+		return (-1);
 	fd_printf(1, "✅ Elements parsed successfully!\n");
 	fd_printf(1, "North: %s\n", game->tex_north->path);
 	fd_printf(1, "South: %s\n", game->tex_south->path);

@@ -40,6 +40,7 @@ SRCS_PARS		= base/main.c \
 			  $(SRC_DIR)/utils/parse_texture_utils.c \
 			  $(SRC_DIR)/utils/parse_color_utils.c \
 			  $(SRC_DIR)/utils/extract_map_utils.c \
+			  $(SRC_DIR)/utils/map_validation_utils.c \
 			  $(SRC_DIR)/utils/validate_map_chars_utils.c \
 			  $(SRC_DIR)/utils/validate_map_borders_utils.c \
 			  $(SRC_DIR)/utils/init_structs_utils.c \
@@ -77,6 +78,7 @@ SRCS_PARS_BONUS	= bonus/main.c \
 			  $(SRC_DIR_BONUS)/utils/parse_texture_utils.c \
 			  $(SRC_DIR_BONUS)/utils/parse_color_utils.c \
 			  $(SRC_DIR_BONUS)/utils/extract_map_utils.c \
+			  $(SRC_DIR_BONUS)/utils/map_validation_utils.c \
 			  $(SRC_DIR_BONUS)/utils/validate_map_chars_utils.c \
 			  $(SRC_DIR_BONUS)/utils/validate_map_borders_utils.c \
 			  $(SRC_DIR_BONUS)/utils/init_structs_utils.c \

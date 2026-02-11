@@ -3,30 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   parse_utils.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
+/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/20 15:02:43 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/02/09 16:43:16 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 18:13:13 by mcecchel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3d.h"
-
-int	is_line_empty(char *line)
-{
-	int	i;
-
-	i = 0;
-	if (!line)
-		return (1);
-	while (line[i])
-	{
-		if (line[i] != ' ' && line[i] != '\t' && line[i] != '\n')
-			return (0);
-		i++;
-	}
-	return (1);
-}
 
 int	skip_spaces(char *str, int index)
 {
@@ -42,14 +26,12 @@ int	is_valid_identifier(char *line)
 	if (!line)
 		return (0);
 	i = skip_spaces(line, 0);
-	// Controllo gli identificatori a 2 caratteri (NO, SO, WE, EA)
 	if (ft_strncmp(&line[i], "NO ", 3) == 0
 		|| ft_strncmp(&line[i], "SO ", 3) == 0
 		|| ft_strncmp(&line[i], "WE ", 3) == 0
 		|| ft_strncmp(&line[i], "EA ", 3) == 0
 		|| ft_strncmp(&line[i], "B ", 2) == 0)
 		return (1);
-	// Controllo gli identificatori a 1 carattere (Floor e Ceiling)
 	if (ft_strncmp(&line[i], "F ", 2) == 0
 		|| ft_strncmp(&line[i], "C ", 2) == 0)
 		return (1);

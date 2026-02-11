@@ -6,7 +6,7 @@
 /*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/19 15:04:20 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/01/29 18:58:20 by mcecchel         ###   ########.fr       */
+/*   Updated: 2026/02/11 18:22:22 by mcecchel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,12 +20,12 @@ int	check_file_extension(char *filename)
 	if (!filename)
 		return (-1);
 	len = ft_strlen(filename);
-	if (len < 5)// Perche' deve essere almeno 1 lettera + .cub
+	if (len < 5)
 	{
 		fd_printf(2, "Error: Filename too short\n");
 		return (-1);
 	}
-	extention = filename + (len - 4);// Ptr a dove dovrebbe iniziare .cub
+	extention = filename + (len - 4);
 	if (ft_strncmp(extention, ".cub", 4) != 0)
 	{
 		fd_printf(2, "Error: Invalid file extension, expected .cub\n");
@@ -40,7 +40,6 @@ int	check_file_access(char *filename)
 
 	if (!filename)
 		return (-1);
-	// Provo ad aprire il file in lettura
 	fd = open(filename, O_RDONLY);
 	if (fd < 0)
 	{

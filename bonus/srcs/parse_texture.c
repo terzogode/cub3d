@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parse_texture.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mbrighi <mbrighi@student.42.fr>            +#+  +:+       +#+        */
+/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/20 15:54:38 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/02/09 16:43:16 by mbrighi          ###   ########.fr       */
+/*   Updated: 2026/02/11 18:23:55 by mcecchel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,10 +17,8 @@ char	*get_texture_path(char *line, int identifier_len)
 	int		i;
 	char	*path;
 
-	// salto identificatori
 	i = skip_spaces(line, 0);
 	i += identifier_len;
-	// salto spazi dopo identificatore
 	i = skip_spaces(line, i);
 	path = ft_strdup(&line[i]);
 	if (!path)
@@ -53,7 +51,6 @@ int	parse_texture(t_game *game, char *line)
 	int	i;
 
 	i = skip_spaces(line, 0);
-	// Identifico il tipo di texture
 	if (ft_strncmp(&line[i], "NO ", 3) == 0)
 		return (parse_north_texture(game, line));
 	else if (ft_strncmp(&line[i], "SO ", 3) == 0)
@@ -64,8 +61,6 @@ int	parse_texture(t_game *game, char *line)
 		return (parse_east_texture(game, line));
 	else if (ft_strncmp(&line[i], "B ", 2) == 0)
 		return (parse_box_texture(game, line));
-	// Non dovremmo mai arrivare qui se is_valid_identifier funziona :(
-	// Spero iddio che non lo stampi mai
 	fd_printf(2, "Error: Invalid texture identifier\n");
 	return (-1);
 }

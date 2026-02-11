@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub3d.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mcecchel <mcecchel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/19 14:41:04 by mcecchel          #+#    #+#             */
-/*   Updated: 2026/02/04 04:42:01 by marvin           ###   ########.fr       */
+/*   Updated: 2026/02/11 18:02:21 by mcecchel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ typedef struct s_texture
 	t_image	*img;// Img caricata con MLX
 }				t_texture;
 
-// Struct per salvare colori floor/ceiling in formato RGB e convertirli in hex per MLX
+// Struct per salvare colori floor/ceiling in formato RGB e convertirli in hex
 typedef struct s_color
 {
 	int		red;
@@ -80,7 +80,7 @@ typedef struct s_perf
 	double	fps;
 	double	fps_raw;
 	double	last_draw_ms;
-} 				t_perf;
+}				t_perf;
 
 // Struct per gestire la mappa di gioco
 typedef struct s_map
@@ -129,7 +129,6 @@ typedef struct s_game
 	t_perf		perf;
 }				t_game;
 
-
 // ==============================================
 //               Validazione input
 // ==============================================
@@ -170,8 +169,6 @@ int			load_file_to_parse(t_game *game, char *filename);
 //              Utility per parsing
 // ==============================================
 
-// Controlla se una riga è vuota o se composta da solo spazi
-int			is_line_empty(char *line);
 // Salta spazi e tab, ritorna indice del primo char valido
 int			skip_spaces(char *str, int index);
 // Controlla se la riga inizia con un identificatore valido
@@ -239,6 +236,8 @@ int			extract_map(t_game *game);
 
 // Utility per parsing mappa (validate_map_utils.c)
 
+// Controlla se una riga è vuota o se composta da solo spazi
+int			is_line_empty(char *line);
 // Calcola l'altezza della mappa
 // (:quante righe NON vuote ci sono da map_start alla fine)
 int			get_map_height(t_game *game);
@@ -254,8 +253,8 @@ void		free_map_rows(char **map_grid, int row_count);
 // =============================================
 //               Validazione mappa
 // =============================================
-
-// Valida caratteri e trova il player
+// Verifica se una linea contiene solo caratteri validi per la mappa
+int			is_map_line(char *line);// Valida caratteri e trova il player
 int			validate_and_find_player(t_game *game);
 // Verifica che la mappa sia chiusa
 int			validate_map_borders(t_game *game);
@@ -317,13 +316,14 @@ void		free_map(t_map *map);
 // Libera struttura di parsing
 void		free_parse(t_parse *parse);
 // Libera schermo
-void		free_screen(t_game *game);// Libera strutture di parsing (texture, colori, mappa, player, parse)
+void		free_screen(t_game *game);
+// Libera strutture di parsing (texture, colori, mappa, player, parse)
 void		cleanup_parsing_fields(t_game *game);
 // Libera risorse MLX (screen, window, display)
-void		cleanup_mlx_resources(t_game *game);// Libera solo i campi interni (per stack-allocated game)
+void		cleanup_mlx_resources(t_game *game);
+// Libera solo i campi interni (per stack-allocated game)
 void		cleanup_game_fields(t_game *game);
 // Libera struttura di gioco completa (per heap-allocated game)
 void		free_game(t_game *game);
-
 
 #endif
